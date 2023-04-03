@@ -1,0 +1,242 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Cloudwatch alarms
+
+Parameters:
+  # General parameters
+  CWAlarmSNSTopicArn:
+    Type: String
+  CreateUpdateFinalTableName:
+    Type: String
+  # Passes parameters
+  PassesSFArn:
+    Type: String
+  DataTestsPassesName:
+    Type: String
+  SQSToPassesApiName:
+    Type: String
+  # Weather parameters
+  WeatherSFArn:
+    Type: String
+  DataTestsWeatherName:
+    Type: String
+  SQSToWeatherApiName:
+    Type: String
+  # Final table parameters
+  DataTestsFinalName:
+    Type: String
+
+Resources:
+  PassesSFFailedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm for failures that occur during Step Function invocations
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref CWAlarmSNSTopicArn
+      MetricName: ExecutionsFailed
+      Namespace: AWS/States
+      Statistic: Sum
+      Dimensions:
+        - Name: StateMachineArn
+          Value: !Ref PassesSFArn
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
+
+  WeatherSFFailedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm for failures that occur during Step Function invocations
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref CWAlarmSNSTopicArn
+      MetricName: ExecutionsFailed
+      Namespace: AWS/States
+      Statistic: Sum
+      Dimensions:
+        - Name: StateMachineArn
+          Value: !Ref WeatherSFArn
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
+
+  SQSToPassesApiLambdaFailedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm for failures that occur during Lambda Function invocations
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref CWAlarmSNSTopicArn
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SQSToPassesApiName
+        - Name: Resource
+          Value: !Ref SQSToPassesApiName
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
+
+  SQSToWeatherApiLambdaFailedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm for failures that occur during Lambda Function invocations
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref CWAlarmSNSTopicArn
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SQSToWeatherApiName
+        - Name: Resource
+          Value: !Ref SQSToWeatherApiName
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
+
+  CreateUpdateFinalTableLambdaFailedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Alarm for failures that occur during Lambda Function invocations
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref CWAlarmSNSTopicArn
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref CreateUpdateFinalTableName
+        - Name: Resource
+          Value: !Ref CreateUpdateFinalTableName
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
+
+  DataTestsPassesLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${DataTestsPassesName}'
+
+  DataTestsPassesFailMetric:
+    Type: AWS::Logs::MetricFilter
+    DependsOn: DataTestsPassesLogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${DataTestsPassesName}'
+      FilterPattern: "?FAIL ?Fail ?fail ?ERROR ?Error ?error"
+      MetricTransformations:
+        - MetricName: FailedDataTestsPasses
+          MetricNamespace: passes/DataTestsPasses
+          MetricValue: 1
+          DefaultValue: 0
+
+  DataTestsPassesFailAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn: DataTestsPassesLogGroup
+    Properties:
+      AlarmDescription: Alarm for "FAIL" keyword in passes data test CloudWatch log
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref CWAlarmSNSTopicArn
+      MetricName: FailedDataTestsPasses
+      Namespace: passes/DataTestsPasses
+      Statistic: Sum
+      Dimensions: []
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
+
+  DataTestsWeatherLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${DataTestsWeatherName}'
+
+  DataTestsWeatherFailMetric:
+    Type: AWS::Logs::MetricFilter
+    DependsOn: DataTestsWeatherLogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${DataTestsWeatherName}'
+      FilterPattern: "?FAIL ?Fail ?fail ?ERROR ?Error ?error"
+      MetricTransformations:
+        - MetricName: FailedDataTestsWeather
+          MetricNamespace: weather/DataTestsWeather
+          MetricValue: 1
+          DefaultValue: 0
+
+  DataTestsWeatherFailAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn: DataTestsWeatherLogGroup
+    Properties:
+      AlarmDescription: Alarm for "FAIL" keyword in weather data test CloudWatch log
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref CWAlarmSNSTopicArn
+      MetricName: FailedDataTestsWeather
+      Namespace: weather/DataTestsWeather
+      Statistic: Sum
+      Dimensions: []
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing
+
+  DataTestsFinalLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${DataTestsFinalName}'
+
+  DataTestsFinalFailMetric1:
+    Type: AWS::Logs::MetricFilter
+    DependsOn: DataTestsFinalLogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${DataTestsFinalName}'
+      FilterPattern: "?FAIL ?Fail ?fail ?ERROR ?Error ?error"
+      MetricTransformations:
+        - MetricName: FailedDataTestsFinal
+          MetricNamespace: final/DataTestsFinal
+          MetricValue: 1
+          DefaultValue: 0
+
+  DataTestsFinalFailAlarm:
+    Type: AWS::CloudWatch::Alarm
+    DependsOn: DataTestsFinalLogGroup
+    Properties:
+      AlarmDescription: Alarm for "FAIL" keyword in weather data test CloudWatch log
+      ActionsEnabled: true
+      AlarmActions:
+        - !Ref CWAlarmSNSTopicArn
+      MetricName: FailedDataTestsFinal
+      Namespace: final/DataTestsFinal
+      Statistic: Sum
+      Dimensions: []
+      Period: 300
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: missing

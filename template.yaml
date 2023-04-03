@@ -1,0 +1,237 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Root stack
+
+Parameters:
+  # Key parameters
+  SNSSubscriptionEmail:
+    # Enter email address to receive CloudWatch alarms notifications
+    Default: james.lauer@outlook.com
+    Type: String
+  N2YOSecretName:
+    # Must be copied and pasted from Secrets Manager after inputting api key
+    # (e.g. n2yo_api_key-G86fg1)
+    Default: n2yo_api_key-LdPR89
+    Type: String
+  OpenWeatherSecretName:
+    # Must be copied and pasted from Secrets Manager after inputting api key
+    # (e.g. openweather_api_key-Fh43ik)
+    Default: openweather_api_key-McqfRv
+    Type: String
+  LambdaInputDataName:
+    # Enter the filename of the input data file you wish to use from app/s3/input_data.
+    # Please try a test file first then when working change to the full file.
+    Default: AUNZ_cities_431.csv
+    Type: String
+  ExpectedObjectNumber:
+    # Enter number of rows in the csv file specified above in LambdaInputDataName.
+    # Number of rows is included in each filename prior to .csv. For test files it is 5.
+    Default: 431
+    Type: String
+
+  # General parameters
+  S3BucketName:
+    # Bucket name overwritten with --parameter-overrides flag in actions-template.yaml
+    Default: default
+    Type: String
+  DataCatalogName:
+    Default: AwsDataCatalog
+    Type: String
+  GlueScriptPrefix:
+    Default: glue_scripts
+    Type: String
+  GlueDBName:
+    Default: iss_db_aus
+    Type: String
+  InputDataPrefix:
+    Default: input_data
+    Type: String
+  FinalTableName:
+    Default: final_table_aus
+    Type: String
+  QueryResultPrefix:
+    # Do not change as will cause error
+    Default: query-results
+    Type: String
+  SQLLocationPrefix:
+    Default: sql_scripts
+    Type: String
+  # Passes parameters
+  PassesGlueScriptName:
+    Default: passes_json_compact.py
+    Type: String
+  PassesQueueName:
+    Default: iss_passes_queue_aus
+    Type: String
+  PassesRawPrefix:
+    Default: iss_passes_raw_json
+    Type: String
+  PassesRawTableName:
+    Default: iss_passes_raw_table
+    Type: String
+  # Weather parameters
+  WeatherGlueScriptName:
+    Default: weather_json_compact.py
+    Type: String
+  WeatherQueueName:
+    Default: iss_weather_queue_aus
+    Type: String
+  WeatherRawPrefix:
+    Default: iss_weather_raw_json
+    Type: String
+  WeatherRawTableName:
+    Default: iss_weather_raw_table
+    Type: String
+
+Resources:
+  S3:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/s3/template.yaml
+      Parameters:
+        S3BucketName: !Ref S3BucketName
+
+  StepPasses:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/step/passes-template.yaml
+      Parameters:
+        CitiesToSQSPassesArn: !GetAtt LambdaPasses.Outputs.CitiesToSQSPassesArn
+        CountObjectsPassesArn: !GetAtt LambdaPasses.Outputs.CountObjectsPassesArn
+        DataCatalogName: !Ref DataCatalogName
+        ExpectedObjectNumber: !Ref ExpectedObjectNumber
+        GlueDBName: !Ref GlueDBName
+        PassesGlueCompactionName: !GetAtt Glue.Outputs.PassesGlueCompactionName
+        DataTestsPassesArn: !GetAtt LambdaPasses.Outputs.DataTestsPassesArn
+        PassesRawPrefix: !Ref PassesRawPrefix
+        PassesRawTableName: !Ref PassesRawTableName
+        QueryResultPrefix: !Ref QueryResultPrefix
+        S3BucketName: !Ref S3BucketName
+
+  StepWeather:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/step/weather-template.yaml
+      Parameters:
+        CitiesToSQSWeatherArn: !GetAtt LambdaWeather.Outputs.CitiesToSQSWeatherArn
+        CountObjectsWeatherArn: !GetAtt LambdaWeather.Outputs.CountObjectsWeatherArn
+        DataCatalogName: !Ref DataCatalogName
+        ExpectedObjectNumber: !Ref ExpectedObjectNumber
+        GlueDBName: !Ref GlueDBName
+        WeatherGlueCompactionName: !GetAtt Glue.Outputs.WeatherGlueCompactionName
+        DataTestsWeatherArn: !GetAtt LambdaWeather.Outputs.DataTestsWeatherArn
+        WeatherRawPrefix: !Ref WeatherRawPrefix
+        WeatherRawTableName: !Ref WeatherRawTableName
+        QueryResultPrefix: !Ref QueryResultPrefix
+        S3BucketName: !Ref S3BucketName
+
+  LambdaPasses:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/lambdas/passes-template.yaml
+      Parameters:
+        PassesQueueArn: !GetAtt SQS.Outputs.PassesQueueArn
+        PassesQueueUrl: !GetAtt SQS.Outputs.PassesQueueUrl
+        PassesDLQArn: !GetAtt SQS.Outputs.PassesDLQArn
+        DataCatalogName: !Ref DataCatalogName
+        ExpectedObjectNumber: !Ref ExpectedObjectNumber
+        GlueDBName: !Ref GlueDBName
+        InputDataPrefix: !Ref InputDataPrefix
+        LambdaInputDataName: !Ref LambdaInputDataName
+        N2YOSecretName: !Ref N2YOSecretName
+        PassesRawPrefix: !Ref PassesRawPrefix
+        PassesRawTableName: !Ref PassesRawTableName
+        QueryResultPrefix: !Ref QueryResultPrefix
+        S3BucketName: !Ref S3BucketName
+        SQLLocationPrefix: !Ref SQLLocationPrefix
+
+  LambdaWeather:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/lambdas/weather-template.yaml
+      Parameters:
+        WeatherQueueArn: !GetAtt SQS.Outputs.WeatherQueueArn
+        WeatherQueueUrl: !GetAtt SQS.Outputs.WeatherQueueUrl
+        WeatherDLQArn: !GetAtt SQS.Outputs.WeatherDLQArn
+        DataCatalogName: !Ref DataCatalogName
+        ExpectedObjectNumber: !Ref ExpectedObjectNumber
+        GlueDBName: !Ref GlueDBName
+        InputDataPrefix: !Ref InputDataPrefix
+        LambdaInputDataName: !Ref LambdaInputDataName
+        OpenWeatherSecretName: !Ref OpenWeatherSecretName
+        WeatherRawPrefix: !Ref WeatherRawPrefix
+        WeatherRawTableName: !Ref WeatherRawTableName
+        QueryResultPrefix: !Ref QueryResultPrefix
+        S3BucketName: !Ref S3BucketName
+        SQLLocationPrefix: !Ref SQLLocationPrefix
+
+  LambdaFinal:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/lambdas/final-template.yaml
+      Parameters:
+        DataCatalogName: !Ref DataCatalogName
+        FinalTableName: !Ref FinalTableName
+        GlueDBName: !Ref GlueDBName
+        PassesRawPrefix: !Sub "${PassesRawPrefix}_compacted"
+        PassesRawTableName: !Ref PassesRawTableName
+        QueryResultPrefix: !Ref QueryResultPrefix
+        S3BucketName: !Ref S3BucketName
+        WeatherRawPrefix: !Sub "${WeatherRawPrefix}_compacted"
+        WeatherRawTableName: !Ref WeatherRawTableName
+        SQLLocationPrefix: !Ref SQLLocationPrefix
+
+  SQS:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/sqs/template.yaml
+      Parameters:
+        PassesQueueName: !Ref PassesQueueName
+        WeatherQueueName: !Ref WeatherQueueName
+
+  Eventbridge:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/eventbridge/template.yaml
+      Parameters:
+        PassesSFArn: !GetAtt StepPasses.Outputs.PassesSFArn
+        WeatherSFArn: !GetAtt StepWeather.Outputs.WeatherSFArn
+        CreateUpdateFinalTableArn: !GetAtt LambdaFinal.Outputs.CreateUpdateFinalTableArn
+        CreateUpdateFinalTableName: !GetAtt LambdaFinal.Outputs.CreateUpdateFinalTableName
+        DataTestsFinalArn: !GetAtt LambdaFinal.Outputs.DataTestsFinalArn
+        DataTestsFinalName: !GetAtt LambdaFinal.Outputs.DataTestsFinalName
+
+  Glue:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/glue/template.yaml
+      Parameters:
+        GlueDBName: !Ref GlueDBName
+        GlueScriptPrefix: !Ref GlueScriptPrefix
+        PassesGlueScriptName: !Ref PassesGlueScriptName
+        PassesRawPrefix: !Ref PassesRawPrefix
+        S3BucketName: !Ref S3BucketName
+        WeatherGlueScriptName: !Ref WeatherGlueScriptName
+        WeatherRawPrefix: !Ref WeatherRawPrefix
+
+  Cloudwatch:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/cloudwatch/template.yaml
+      Parameters:
+        CWAlarmSNSTopicArn: !GetAtt SNS.Outputs.CWAlarmSNSTopicArn
+        PassesSFArn: !GetAtt StepPasses.Outputs.PassesSFArn
+        WeatherSFArn: !GetAtt StepWeather.Outputs.WeatherSFArn
+        CreateUpdateFinalTableName: !GetAtt LambdaFinal.Outputs.CreateUpdateFinalTableName
+        SQSToPassesApiName: !GetAtt LambdaPasses.Outputs.SQSToPassesApiName
+        SQSToWeatherApiName: !GetAtt LambdaWeather.Outputs.SQSToWeatherApiName
+        DataTestsPassesName: !GetAtt LambdaPasses.Outputs.DataTestsPassesName
+        DataTestsWeatherName: !GetAtt LambdaWeather.Outputs.DataTestsWeatherName
+        DataTestsFinalName: !GetAtt LambdaFinal.Outputs.DataTestsFinalName
+
+  SNS:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: app/sns/template.yaml
+      Parameters:
+        SNSSubscriptionEmail: !Ref SNSSubscriptionEmail

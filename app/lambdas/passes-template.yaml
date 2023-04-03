@@ -1,0 +1,315 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Passes Lambda lambda_functions
+
+Parameters:
+  # General parameters
+  DataCatalogName:
+    Type: String
+  ExpectedObjectNumber:
+    Type: String
+  GlueDBName:
+    Type: String
+  InputDataPrefix:
+    Type: String
+  LambdaInputDataName:
+    Type: String
+  QueryResultPrefix:
+    Type: String
+  S3BucketName:
+    Type: String
+  SQLLocationPrefix:
+    Type: String
+  # Passes parameters
+  PassesQueueArn:
+    Type: String
+  PassesQueueUrl:
+    Type: String
+  PassesDLQArn:
+    Type: String
+  N2YOSecretName:
+    Type: String
+  PassesRawPrefix:
+    Type: String
+  PassesRawTableName:
+    Type: String
+
+Globals:
+  Function:
+    Runtime: python3.9
+    Timeout: 900
+    Environment:
+      Variables:
+        MY_AWS_REGION: !Ref AWS::Region
+        S3_BUCKET: !Ref S3BucketName
+
+Resources:
+  CountObjectsPassesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: CountObjectsPassesRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+
+  CountObjectsPasses:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_functions/objects_in_s3.lambda_handler
+      Role: !GetAtt CountObjectsPassesRole.Arn
+      MemorySize: 128
+      Environment:
+        Variables:
+          BASE_PREFIX: !Ref PassesRawPrefix
+
+  CitiesToSQSPassesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: CitiesToSQSPassesRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:ListObjects
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource:
+                - !Ref PassesQueueArn
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+              - Effect: Allow
+                Action:
+                  - cloudwatch:*
+                Resource:
+                  - '*'
+
+  CitiesToSQSPasses:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_functions/cities_to_sqs.lambda_handler
+      Role: !GetAtt CitiesToSQSPassesRole.Arn
+      MemorySize: 128
+      Environment:
+        Variables:
+          LAMBDA_INPUT_DATA: !Ref LambdaInputDataName
+          INPUT_DATA_PREFIX: !Ref InputDataPrefix
+          SQS_QUEUE_URL: !Ref PassesQueueUrl
+
+  SQSToPassesApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SQSToPassesApiRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                  - s3:GetBucketVersioning
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource:
+                - !Ref PassesQueueArn
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource:
+                  - !Ref PassesDLQArn
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${N2YOSecretName}'
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+              - Effect: Allow
+                Action:
+                  - cloudwatch:GetMetricData
+                  - cloudwatch:ListMetrics
+                Resource:
+                  - '*'
+
+  SQSToPassesApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_functions/sqs_to_passes_api.lambda_handler
+      Role: !GetAtt SQSToPassesApiRole.Arn
+      MemorySize: 128
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref PassesQueueUrl
+          PASSES_RAW_PREFIX: !Ref PassesRawPrefix
+
+  SQSEventPassesInvoke:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 10
+      Enabled: True
+      EventSourceArn: !Ref PassesQueueArn
+      FunctionName: !GetAtt SQSToPassesApi.Arn
+      MaximumBatchingWindowInSeconds: 5
+
+  DataTestsPassesRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Policies:
+          - PolicyName: DataTestsPassesRole
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:PutObject
+                    - s3:GetObject
+                    - s3:ListBucket
+                    - s3:GetBucketLocation
+                  Resource:
+                    - !Sub 'arn:aws:s3:::${S3BucketName}'
+                    - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+                    - !Sub 'arn:aws:s3:::${S3BucketName}/${PassesRawPrefix}/*'
+                    - !Sub 'arn:aws:s3:::${S3BucketName}/${QueryResultPrefix}/*'
+                - Effect: Allow
+                  Action:
+                    - logs:PutLogEvents
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                  Resource:
+                    - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                    - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+                - Effect: Allow
+                  Action:
+                    - athena:StartQueryExecution
+                    - athena:StopQueryExecution
+                    - athena:GetQueryExecution
+                    - athena:GetQueryResults
+                    - athena:GetWorkGroup
+                  Resource:
+                    - !Sub 'arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/primary'
+                - Effect: Allow
+                  Action:
+                    - glue:GetTable
+                    - glue:GetTables
+                    - glue:GetDatabase
+                    - glue:GetDatabases
+                    - glue:GetPartition
+                    - glue:GetPartitions
+                    - glue:SearchTables
+                  Resource:
+                    - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                    - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDBName}'
+                    - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDBName}/${PassesRawTableName}'
+
+  DataTestsPasses:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_functions/data_tests_passes.lambda_handler
+      Role: !GetAtt DataTestsPassesRole.Arn
+      MemorySize: 128
+      Environment:
+        Variables:
+          DATA_CATALOG_NAME: !Ref DataCatalogName
+          EXPECTED_OBJECT_NUMBER: !Ref ExpectedObjectNumber
+          GLUE_DB_NAME: !Ref GlueDBName
+          PASSES_RAW_TABLE_NAME: !Ref PassesRawTableName
+          QUERY_RESULT_LOCATION: !Ref QueryResultPrefix
+          SQL_LOCATION_PREFIX: !Ref SQLLocationPrefix
+
+Outputs:
+  CitiesToSQSPassesArn:
+    Value: !GetAtt CitiesToSQSPasses.Arn
+  CountObjectsPassesArn:
+    Value: !GetAtt CountObjectsPasses.Arn
+  DataTestsPassesArn:
+    Value: !GetAtt DataTestsPasses.Arn
+  DataTestsPassesName:
+    Value: !Ref DataTestsPasses
+  SQSToPassesApiArn:
+    Value: !GetAtt SQSToPassesApi.Arn
+  SQSToPassesApiName:
+    Value: !Ref SQSToPassesApi

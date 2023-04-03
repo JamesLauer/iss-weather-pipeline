@@ -1,0 +1,181 @@
+{ "mocked_sqs_location_data": {
+  "city": "Perth",
+  "lat": "-31.9522",
+  "lon": "115.8589",
+  "region": "Western Australia",
+  "country": "Australia",
+  "country_code": "AUS"
+},
+  "passes_api_parameters": {
+    "nor_id": "25544",
+    "obs_alt": "0.0",
+    "days": "1",
+    "min_vis": "60"
+  },
+  "mocked_sqs_to_lambda_event": {
+    "Records": [
+      {
+        "messageId": "f3860ce7-b9d3-4bc4-bed8-c53042a818a9",
+        "receiptHandle": "AQEB/gd3pDkFYG+may0rUrZ6CkwouZ6Khvu4Sd1kEmqUwdr/yOy5vh97wo+Gnr8d1XNEHAbkNuE0Adxhg+c9dPj8x3CXuTNlPFzwcC9qd3g16W0L5a4KlvdX+8P57kRda7klAVTw7PdyDWyLjE4ZdU2HhVF7DNVfCKBQW44kVBKSN3RbH+87Kjnf17PXMqmal2dvFkTM/LND5+MzbPp4pau1pgaEWEvyyyU/KEFcO9mt4O4yC8mF9ARU2IBvLOdHqK2ZgN3VYT1iSs/XBejkhZ2sgl/whVWbLE1/KJSlGzO1T1vF9tFNmLqR5K1Z++jAxLIENy+W89MnP4xxaCiTZB65O/LDOoXaiW493fsDvdpXUz+UoTDqKZ/VyT1QqQy4lzOo7ek8WpVP3lIZUzhbrJTw75v3x5jsY4yHoiokGDurhd4=",
+        "body": "{\"city\": \"Perth\", \"region\": \"Western Australia\", \"latitude\": \"-31.9522\", \"longitude\": \"115.8589\", \"country\": \"Australia\", \"country_code\": \"AUS\"}",
+        "attributes": {
+          "ApproximateReceiveCount": "93",
+          "SentTimestamp": "1671533573397",
+          "SenderId": "AIDA55O5LHPI2UBKYNTSV",
+          "ApproximateFirstReceiveTimestamp": "1671533573397"
+        },
+        "messageAttributes": {
+        },
+        "md5OfMessageAttributes": "None",
+        "md5OfBody": "016ec798c39b720d70e9c4eaef33e5e7",
+        "eventSource": "aws:sqs",
+        "eventSourceARN": "arn:aws:sqs:ap-southeast-2:956631301073:iss_passes_queue_test",
+        "awsRegion": "ap-southeast-2"
+      }
+    ]
+  },
+  "expected_transformed_passes_from_api_with_passes": {
+    "city": "Perth",
+    "country": "Australia",
+    "duration": 140,
+    "endAz": 65.85,
+    "endAzCompass": "ENE",
+    "endEl": 10.27,
+    "endUTC": 1672056480,
+    "lat": "-31.9522",
+    "lon": "115.8589",
+    "mag": 0.4,
+    "maxAz": 138.86,
+    "maxAzCompass": "SE",
+    "maxEl": 25.8,
+    "maxUTC": 1672056175,
+    "passescount": 1,
+    "region": "Western Australia",
+    "satid": 25544,
+    "satname": "SPACE STATION",
+    "startAz": 209.97,
+    "startAzCompass": "SSW",
+    "startEl": 0.16,
+    "startUTC": 1672055865,
+    "startVisibility": 1672055865,
+    "transactionscount": 9
+  },
+  "expected_transformed_passes_from_api_without_passes": {
+    "city": "Perth",
+    "country": "Australia",
+    "lat": "-31.9522",
+    "lon": "115.8589",
+    "passescount": 1,
+    "region": "Western Australia",
+    "satid": 25544,
+    "satname": "SPACE STATION",
+    "transactionscount": 9
+  },
+  "expected_passes_api_output_with_passes": {
+    "info": {
+      "satid": 25544,
+      "satname": "SPACE STATION",
+      "transactionscount": 9,
+      "passescount": 1
+    },
+    "passes": [
+      {
+        "startAz": 209.97,
+        "startAzCompass": "SSW",
+        "startEl": 0.16,
+        "startUTC": 1672055865,
+        "maxAz": 138.86,
+        "maxAzCompass": "SE",
+        "maxEl": 25.8,
+        "maxUTC": 1672056175,
+        "endAz": 65.85,
+        "endAzCompass": "ENE",
+        "endEl": 10.27,
+        "endUTC": 1672056480,
+        "mag": 0.4,
+        "duration": 140,
+        "startVisibility": 1672055865
+      }
+    ]
+  },
+  "expected_passes_api_output_without_passes": {
+    "info": {
+      "satid": 25544,
+      "satname": "SPACE STATION",
+      "transactionscount": 9,
+      "passescount": 1
+    }
+  },
+  "mocked_sqs_to_lambda_multi_city_event": {
+    "Records": [
+      {
+        "messageId": "60a4dee0-ff15-4625-8a0d-6b098f645fa7",
+        "receiptHandle": "AQEBk6pBeU0ACJFyGG77XuqNPNognhVOYkFbel/55qWybbZ8FIxRtggn+0kbPwp9N6NO6Sc3q4EaN0n3zEkSRdPvcQIJ5SiS8sKaMdM6wCe+4Xs5DD5/5WYRYXAkm4kfJFRpxqTP8w+Xhmn8AF/xqCNDeL4Q5B6MglfhK6emGuO3VHvhYahaOTpgF6ZPfUOubkdX/gcPWNMnuHAYgXpQRgglW5p1Ndcfzx9uq7MLJlsHDg1B17sKzmMsfp62HNg43p/6okA1hKTCgxFHmqq8uG9XbdpCJEJRfXJV1mJy+bpq+rXfhK9RcDPbT05OOPUSMyhQNz5UYb6RPugrweMd3LQvuJ7Z3JAWTRpkE3ZbmIN6Ms2C4mq3VhSKA221SUDh4/V3WugGH2LS+3WmtePaovscizYMiiUCjkMGUlWyEMcag+I=",
+        "body": "{\"city\": \"Melbourne\", \"region\": \"Victoria\", \"latitude\": \"-37.8136\", \"longitude\": \"144.9631\", \"country\": \"Australia\", \"country_code\": \"AUS\"}",
+        "attributes": {
+            "ApproximateReceiveCount": "1",
+            "SentTimestamp": "1672387315224",
+            "SenderId": "AROA55O5LHPI6M5JDDXJA:moto-Lambda-1CFGC5N0PT732-CitiesToSQSPasses-Sn9jA4ffMYcM",
+            "ApproximateFirstReceiveTimestamp": "1672387320224"
+        },
+        "messageAttributes": {},
+        "md5OfMessageAttributes": null,
+        "md5OfBody": "91fb7c83d615454a977336fb3bd3d60c",
+        "eventSource": "aws:sqs",
+        "eventSourceARN": "arn:aws:sqs:ap-southeast-2:956631301073:iss_passes_queue_test",
+        "awsRegion": "ap-southeast-2"
+      },
+      {
+        "messageId": "e786eb11-9050-42e0-a108-c03021309c66",
+        "receiptHandle": "AQEBlXyUdNGsOw6zW7RFWDzS0vrx8X7JbhAO6nIdUgtotRmJaVOf4UHwBvflkhr9yy/gaofUhIX99kveREAhAUu3JJtOw523figd0er4Ij30ufICotAns4REGieHoz27Lfgeu8rKRGlVxwMHy79v0A6Lj5xGVgn7WkAhoNilU/qx44KFhzUSzQ08zW2w2XAB8DIFftDZUJRzmFKAzgSl1nASpi0EeM7YbUBvT4mQbIywdWdTvSUc/Tq2Ip9V4uSTnXivxKX9HjTUst1RKQqyd+piHMQLYv+ylcCwkpW9qY8epMC+Etk5NXUzMfBodis9Lh5/14cKiRVgUn/aPRFijEr+CNx+UCfhvkfiApsgNZ9dce2gnVw2PMkshCBC4Qm9V3Ry7pt6Q8GrQTKSnDHMbbSW2bFgy60NbPuxmC+bE9Rgq6g=",
+        "body": "{\"city\": \"Sydney\", \"region\": \"New South Wales\", \"latitude\": \"-33.8650\", \"longitude\": \"151.2094\", \"country\": \"Australia\", \"country_code\": \"AUS\"}",
+        "attributes": {
+            "ApproximateReceiveCount": "1",
+            "SentTimestamp": "1672387315204",
+            "SenderId": "AROA55O5LHPI6M5JDDXJA:moto-Lambda-1CFGC5N0PT732-CitiesToSQSPasses-Sn9jA4ffMYcM",
+            "ApproximateFirstReceiveTimestamp": "1672387320204"
+        },
+        "messageAttributes": {},
+        "md5OfMessageAttributes": null,
+        "md5OfBody": "d15e1593bf62668b433ce7122ccb5ef7",
+        "eventSource": "aws:sqs",
+        "eventSourceARN": "arn:aws:sqs:ap-southeast-2:956631301073:iss_passes_queue_test",
+        "awsRegion": "ap-southeast-2"
+      },
+      {
+        "messageId": "a38188de-315a-433c-a344-42dc5f5bc31a",
+        "receiptHandle": "AQEBORZR2TxsoDn4Se0HcX7N14ko1COVFT+PtPSpUB3XdmNV7bCOgYOxiS+4VYcZHEQYBXhKHiFx8RJzZ+YmeamEjw832YEZvlu9Geu41JfJIVbj9deNPhVqI2df5Wd+kL2dKYSvdMSrHlzwq68BuS9CjKEo2dnvLlmC9LMHXZ/JrBS3qMrD4SmlrW8HW2SX5AVXdOyNbyx672HIJKRBH2HWK7puf9i2u/d0VIX4lEo++OQenWP++RHUdSrS3objE2eIjVQGbK52hwbESiuBPlbIfUvWfplrD9ldkpaelZPdTBAJNxfmo0VtMJrRoYE3tkUUiEbfxEYGePt/ptUxPvafnGgHCtYGaVYOOMoRLmtWHHN8LIRhoMDUjg54G3dX2xtusCxalOlsjLLJ1prAQl+KiP8gnE8LrdzrMwa+JANcufE=",
+        "body": "{\"city\": \"Brisbane\", \"region\": \"Queensland\", \"latitude\": \"-27.4678\", \"longitude\": \"153.0281\", \"country\": \"Australia\", \"country_code\": \"AUS\"}",
+        "attributes": {
+            "ApproximateReceiveCount": "1",
+            "SentTimestamp": "1672387315238",
+            "SenderId": "AROA55O5LHPI6M5JDDXJA:moto-Lambda-1CFGC5N0PT732-CitiesToSQSPasses-Sn9jA4ffMYcM",
+            "ApproximateFirstReceiveTimestamp": "1672387320238"
+        },
+        "messageAttributes": {},
+        "md5OfMessageAttributes": null,
+        "md5OfBody": "0786dc529fcde80ba9b1cd5414b22efe",
+        "eventSource": "aws:sqs",
+        "eventSourceARN": "arn:aws:sqs:ap-southeast-2:956631301073:iss_passes_queue_test",
+        "awsRegion": "ap-southeast-2"
+      },
+      {
+        "messageId": "5e93349e-a527-4323-9819-e2e74216e55d",
+        "receiptHandle": "AQEBk2wBkOG6Vv2ahPnu545cYGLsjNq6BxqnDFbZjzRSRD+hWR6CPEk8XbWwmXw8j+G204J8BfgJll2DYj8MTOtQrJ9mlFLMP0OxjQfuy81uCHyg44FDHlrRy+Iu3r81tk6pA8dahEw1ib0UFUw1Tr0zFjbxkRWLwNvTjznM4Bjx6OoGBApKZjPuUJzSmvpmg7D6uGdi6I867hV28Kkn08H14Jb3qL9WKloS8uARugqPesjN6kTrUyKUa3DwBzv6Xf8sAJ1voyOWVgCH3ZraGJK6vFh1IHJ13sVqWZW92tkQQ/MnMYcg9341+/9y0zuFUtmddJYy5n7c1f62JSAEg/YSJWECBGbhWvt0y9hZmdxqDX4ZmiLxFvEUflgFLrH+I0UOU/tN8toeCNIRZCHEsik3zK3RVxl+gWsbI3l6ltawosM=",
+        "body": "{\"city\": \"Adelaide\", \"region\": \"South Australia\", \"latitude\": \"-34.9289\", \"longitude\": \"138.6011\", \"country\": \"Australia\", \"country_code\": \"AUS\"}",
+        "attributes": {
+            "ApproximateReceiveCount": "1",
+            "SentTimestamp": "1672387315322",
+            "SenderId": "AROA55O5LHPI6M5JDDXJA:moto-Lambda-1CFGC5N0PT732-CitiesToSQSPasses-Sn9jA4ffMYcM",
+            "ApproximateFirstReceiveTimestamp": "1672387320322"
+        },
+        "messageAttributes": {},
+        "md5OfMessageAttributes": null,
+        "md5OfBody": "ff231f0e576c5ff28f0490ee15ea8436",
+        "eventSource": "aws:sqs",
+        "eventSourceARN": "arn:aws:sqs:ap-southeast-2:956631301073:iss_passes_queue_test",
+        "awsRegion": "ap-southeast-2"
+      }
+    ]
+  }
+}

@@ -1,0 +1,221 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Weather step function
+
+Parameters:
+  CitiesToSQSWeatherArn:
+    Type: String
+  CountObjectsWeatherArn:
+    Type: String
+  DataCatalogName:
+    Type: String
+  ExpectedObjectNumber:
+    Type: String
+  GlueDBName:
+    Type: String
+  WeatherGlueCompactionName:
+    Type: String
+  DataTestsWeatherArn:
+    Type: String
+  WeatherRawPrefix:
+    Type: String
+  WeatherRawTableName:
+    Type: String
+  QueryResultPrefix:
+    Type: String
+  S3BucketName:
+    Type: String
+
+Resources:
+  WeatherSFRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - !Sub 'states.${AWS::Region}.amazonaws.com'
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: WeatherSFPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Ref CitiesToSQSWeatherArn
+                  - !Ref CountObjectsWeatherArn
+                  - !Ref DataTestsWeatherArn
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:CreateBucket
+                  - s3:GetBucketLocation
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/${WeatherRawPrefix}/*'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/${QueryResultPrefix}/*'
+              - Effect: Allow
+                Action:
+                  - athena:StartQueryExecution
+                  - athena:StopQueryExecution
+                  - athena:GetQueryExecution
+                  - athena:GetQueryResults
+                  - athena:GetWorkGroup
+                Resource:
+                  - !Sub 'arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/primary'
+              - Effect: Allow
+                Action:
+                  - glue:BatchCreatePartition
+                  - glue:CreateTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:SearchTables
+                  - glue:StartJobRun
+                  - glue:GetJobRun
+                  - glue:GetJobRuns
+                  - glue:BatchStopJobRun
+                Resource:
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDBName}'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDBName}/${WeatherRawTableName}'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:job/${WeatherGlueCompactionName}'
+              - Effect: Allow
+                Action:
+                  - cloudwatch:*
+                Resource:
+                  - '*'
+
+  WeatherSF:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString:
+        !Sub
+        - |-
+          {
+            "StartAt": "L-2_1: objects_in_s3",
+            "States": {
+              "L-2_1: objects_in_s3": {
+                "Type": "Task",
+                "Resource": "${CountObjectsWeatherArnSub}",
+                "Comment": "Counts objects in today's S3 prefix",
+                "Next": "Has pipeline already been run today?"
+              },
+              "Has pipeline already been run today?": {
+                "Type": "Choice",
+                "Choices": [
+                 {
+                    "Variable": "$.objects",
+                    "NumericEquals": ${ExpectedObjectNumberSub},
+                    "Next": "Yes - raise error"
+                  },
+                  {
+                    "Variable": "$.objects",
+                    "NumericLessThan": ${ExpectedObjectNumberSub},
+                    "Next": "No - start pipeline"
+                  }
+                ]
+              },
+              "Yes - raise error": {
+                "Type": "Fail",
+                "Cause": "Objects already in prefix"
+              },
+              "No - start pipeline": {
+                "Type": "Pass",
+                "Next": "L-2_2: cities_to_sqs_queue"
+              },
+              "L-2_2: cities_to_sqs_queue": {
+                "Type": "Task",
+                "Resource": "${CitiesToSQSWeatherArnSub}",
+                "Comment": "Sends city data to sqs_to_weather_api for ISS weather",
+                "Next": "L-2_3: sqs_to_weather_api"
+              },
+              "L-2_3: sqs_to_weather_api": {
+                "Type": "Pass",
+                "Comment": "Lambda function that is invoked asynchronously from SQS",
+                "Next": "Waits for all messages to be processed"
+              },
+              "Waits for all messages to be processed": {
+                "Type": "Wait",
+                "Seconds": 60,
+                "Comment": "Waits for all sqs_to_weather_api messages to be processed by CitiesToISSApi lambda function",
+                "Next": "G-2_1: weather_json_compact"
+              },
+              "G-2_1: weather_json_compact": {
+                "Type": "Task",
+                "Resource": "arn:aws:states:::glue:startJobRun.sync",
+                "Parameters": {
+                  "JobName": "${WeatherGlueCompactionNameSub}"
+                },
+                "Next": "A-2_1: weather_raw_table"
+              },
+              "A-2_1: weather_raw_table": {
+                "Type": "Task",
+                "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+                "Parameters": {
+                  "WorkGroup": "primary",
+                 "QueryExecutionContext": {
+                  "Catalog": "${DataCatalogNameSub}",
+                  "Database": "${GlueDBNameSub}"
+                  },
+                  "ResultConfiguration": {
+                     "OutputLocation": "s3://${S3BucketNameSub}/${QueryResultPrefixSub}"
+                  },
+                  "QueryString": "CREATE EXTERNAL TABLE IF NOT EXISTS ${WeatherRawTableNameSub} (city string, lat double, lon double, region string, country string, timezone string, timezone_offset int, dt int, temp double, feels_like double, pressure int, humidity int, dew_point double, uvi double, clouds int, visibility int, wind_speed double, wind_deg int, wind_gust double, pop double, id int, main string, description string, icon string, rain struct<1h:double>, snow struct<1h:double>) PARTITIONED BY (year string, month string, day string) STORED AS PARQUET LOCATION 's3://${S3BucketNameSub}/${WeatherRawPrefixSub}'"
+                  },
+                "Next": "A-2_2: MSCK repair ${WeatherRawTableNameSub}"
+              },
+              "A-2_2: MSCK repair ${WeatherRawTableNameSub}": {
+                "Type": "Task",
+                "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+                "Parameters": {
+                  "WorkGroup": "primary",
+                  "QueryExecutionContext": {
+                    "Catalog": "${DataCatalogNameSub}",
+                    "Database": "${GlueDBNameSub}"
+                    },
+                  "ResultConfiguration": {
+                     "OutputLocation": "s3://${S3BucketNameSub}/${QueryResultPrefixSub}"
+                  },
+                  "QueryString": "MSCK REPAIR TABLE ${WeatherRawTableNameSub}"
+                },
+                     "Next": "L-2_4: weather_data_tests"
+              },
+              "L-2_4: weather_data_tests": {
+                "Type": "Task",
+                "Resource": "${DataTestsWeatherArnSub}",
+                "Comment": "Checks quality of data in silver weather table",
+                "End": true
+              }
+            }
+          }
+        - CountObjectsWeatherArnSub: !Ref CountObjectsWeatherArn
+          CitiesToSQSWeatherArnSub: !Ref CitiesToSQSWeatherArn
+          DataCatalogNameSub: !Ref DataCatalogName
+          ExpectedObjectNumberSub: !Ref ExpectedObjectNumber
+          GlueDBNameSub: !Ref GlueDBName
+          DataTestsWeatherArnSub: !Ref DataTestsWeatherArn
+          WeatherGlueCompactionNameSub: !Ref WeatherGlueCompactionName
+          WeatherRawPrefixSub: !Sub '${WeatherRawPrefix}_compacted'
+          WeatherRawTableNameSub: !Ref WeatherRawTableName
+          QueryResultPrefixSub: !Ref QueryResultPrefix
+          S3BucketNameSub: !Ref S3BucketName
+      RoleArn: !GetAtt WeatherSFRole.Arn
+
+Outputs:
+  WeatherSFArn:
+    Value: !GetAtt WeatherSF.Arn
+  WeatherSFName:
+    Value: !Ref WeatherSF

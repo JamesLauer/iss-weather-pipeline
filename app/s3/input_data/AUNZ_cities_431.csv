@@ -1,0 +1,432 @@
+city,region,country,country_code,latitude,longitude
+Sydney,New South Wales,Australia,AUS,-33.8650,151.2094
+Melbourne,Victoria,Australia,AUS,-37.8136,144.9631
+Brisbane,Queensland,Australia,AUS,-27.4678,153.0281
+Perth,Western Australia,Australia,AUS,-31.9522,115.8589
+Adelaide,South Australia,Australia,AUS,-34.9289,138.6011
+Canberra,Australian Capital Territory,Australia,AUS,-35.2931,149.1269
+Gold Coast,Queensland,Australia,AUS,-28.0167,153.4000
+Cranbourne,Victoria,Australia,AUS,-38.0996,145.2834
+Newcastle,New South Wales,Australia,AUS,-32.9167,151.7500
+Wollongong,New South Wales,Australia,AUS,-34.4331,150.8831
+Geelong,Victoria,Australia,AUS,-38.1500,144.3500
+Hobart,Tasmania,Australia,AUS,-42.8806,147.3250
+Townsville,Queensland,Australia,AUS,-19.2564,146.8183
+Ipswich,Queensland,Australia,AUS,-27.6167,152.7667
+Cairns,Queensland,Australia,AUS,-16.9303,145.7703
+Darwin,Northern Territory,Australia,AUS,-12.4381,130.8411
+Toowoomba,Queensland,Australia,AUS,-27.5667,151.9500
+Ballarat,Victoria,Australia,AUS,-37.5500,143.8500
+Caloundra,Queensland,Australia,AUS,-26.7986,153.1289
+Campbelltown,New South Wales,Australia,AUS,-34.0733,150.8261
+Leopold,Victoria,Australia,AUS,-38.1892,144.4644
+Corinda,Queensland,Australia,AUS,-27.4833,153.1000
+Bendigo,Victoria,Australia,AUS,-36.7500,144.2667
+Launceston,Tasmania,Australia,AUS,-41.4419,147.1450
+Mackay,Queensland,Australia,AUS,-21.1411,149.1861
+Rockhampton,Queensland,Australia,AUS,-23.3750,150.5117
+Maitland,New South Wales,Australia,AUS,-32.7167,151.5500
+Bunbury,Western Australia,Australia,AUS,-33.3333,115.6333
+Coffs Harbour,New South Wales,Australia,AUS,-30.3022,153.1189
+Bundaberg,Queensland,Australia,AUS,-24.8500,152.3500
+Wagga Wagga,New South Wales,Australia,AUS,-35.1189,147.3689
+Hervey Bay,Queensland,Australia,AUS,-25.2853,152.8728
+Shepparton,Victoria,Australia,AUS,-36.3833,145.4000
+Albury,New South Wales,Australia,AUS,-36.0806,146.9158
+Port Macquarie,New South Wales,Australia,AUS,-31.4333,152.9000
+Pakenham,Victoria,Australia,AUS,-38.0712,145.4878
+Tamworth,New South Wales,Australia,AUS,-31.0833,150.9167
+Orange,New South Wales,Australia,AUS,-33.2833,149.1000
+Dubbo,New South Wales,Australia,AUS,-32.2569,148.6011
+Bathurst,New South Wales,Australia,AUS,-33.4200,149.5778
+Geraldton,Western Australia,Australia,AUS,-28.7744,114.6089
+Sunbury,Victoria,Australia,AUS,-37.5811,144.7139
+Nowra,New South Wales,Australia,AUS,-34.8833,150.6000
+Frankston,Victoria,Australia,AUS,-38.1580,145.1350
+Warrnambool,Victoria,Australia,AUS,-38.3833,142.4833
+Queanbeyan,New South Wales,Australia,AUS,-35.3533,149.2342
+Wodonga,Victoria,Australia,AUS,-36.1214,146.8881
+Albany,Western Australia,Australia,AUS,-35.0228,117.8814
+Gladstone,Queensland,Australia,AUS,-23.8489,151.2625
+Mildura,Victoria,Australia,AUS,-34.1889,142.1583
+Southport,Queensland,Australia,AUS,-27.9667,153.4000
+Dandenong,Victoria,Australia,AUS,-37.9810,145.2150
+Alice Springs,Northern Territory,Australia,AUS,-23.7000,133.8667
+Mount Gambier,South Australia,Australia,AUS,-37.8294,140.7828
+Kalgoorlie,Western Australia,Australia,AUS,-30.7489,121.4658
+Lismore,New South Wales,Australia,AUS,-28.8167,153.2833
+Quakers Hill,New South Wales,Australia,AUS,-33.7344,150.8789
+Ballina,New South Wales,Australia,AUS,-28.8333,153.5333
+Taree,New South Wales,Australia,AUS,-31.9000,152.4500
+Gawler,South Australia,Australia,AUS,-34.5981,138.7450
+Maryborough,Queensland,Australia,AUS,-25.5375,152.7019
+Caboolture,Queensland,Australia,AUS,-27.0667,152.9670
+Traralgon,Victoria,Australia,AUS,-38.1958,146.5403
+Armidale,New South Wales,Australia,AUS,-30.5000,151.6500
+Busselton,Western Australia,Australia,AUS,-33.6478,115.3458
+Goulburn,New South Wales,Australia,AUS,-34.7547,149.6186
+Cessnock,New South Wales,Australia,AUS,-32.8342,151.3555
+Devonport,Tasmania,Australia,AUS,-41.1806,146.3464
+Whyalla,South Australia,Australia,AUS,-33.0333,137.5667
+Bacchus Marsh,Victoria,Australia,AUS,-37.6750,144.4389
+Gympie,Queensland,Australia,AUS,-26.1900,152.6655
+Griffith,New South Wales,Australia,AUS,-34.2900,146.0400
+Grafton,New South Wales,Australia,AUS,-29.6833,152.9333
+Kwinana,Western Australia,Australia,AUS,-32.2394,115.7702
+Burnie,Tasmania,Australia,AUS,-41.0636,145.8753
+Yeppoon,Queensland,Australia,AUS,-23.1333,150.7333
+Wangaratta,Victoria,Australia,AUS,-36.3583,146.3125
+Mount Eliza,Victoria,Australia,AUS,-38.1890,145.0920
+Murray Bridge,South Australia,Australia,AUS,-35.1170,139.2670
+Narangba,Queensland,Australia,AUS,-27.2015,152.9655
+Mount Isa,Queensland,Australia,AUS,-20.7333,139.5000
+Broken Hill,New South Wales,Australia,AUS,-31.9567,141.4678
+Banora Point,New South Wales,Australia,AUS,-28.2225,153.5386
+Nerang,Queensland,Australia,AUS,-27.9956,153.3220
+Lara,Victoria,Australia,AUS,-38.0167,144.4167
+Horsham,Victoria,Australia,AUS,-36.7167,142.2000
+Mount Barker,South Australia,Australia,AUS,-35.0667,138.8500
+Port Lincoln,South Australia,Australia,AUS,-34.7322,135.8586
+Karratha,Western Australia,Australia,AUS,-20.7364,116.8464
+Singleton,New South Wales,Australia,AUS,-32.5667,151.1697
+Warwick,Queensland,Australia,AUS,-28.2152,152.0352
+Echuca,Victoria,Australia,AUS,-36.1333,144.7500
+Ulladulla,New South Wales,Australia,AUS,-35.3486,150.4678
+Kempsey,New South Wales,Australia,AUS,-31.0833,152.8333
+Ulverstone,Tasmania,Australia,AUS,-41.1667,146.1667
+Barwon Heads,Victoria,Australia,AUS,-38.2500,144.5167
+Australind,Western Australia,Australia,AUS,-33.2800,115.7260
+Sale,Victoria,Australia,AUS,-38.1000,147.0667
+Rochedale,Queensland,Australia,AUS,-27.5952,153.1233
+Port Pirie,South Australia,Australia,AUS,-33.1858,138.0169
+Morwell,Victoria,Australia,AUS,-38.2333,146.4000
+Warragul,Victoria,Australia,AUS,-38.1500,145.9333
+Broome,Western Australia,Australia,AUS,-17.9619,122.2361
+Port Augusta,South Australia,Australia,AUS,-32.4925,137.7658
+Penrith,New South Wales,Australia,AUS,-33.7511,150.6942
+Forster,New South Wales,Australia,AUS,-32.1806,152.5117
+Goonellabah,New South Wales,Australia,AUS,-28.8150,153.3178
+Port Hedland,Western Australia,Australia,AUS,-20.3100,118.6011
+Torquay,Victoria,Australia,AUS,-38.3333,144.3167
+Emerald,Queensland,Australia,AUS,-23.5167,148.1500
+Gisborne,Victoria,Australia,AUS,-37.4900,144.5889
+Lithgow,New South Wales,Australia,AUS,-33.4833,150.1500
+Rutherford,New South Wales,Australia,AUS,-32.7150,151.5317
+Bowral,New South Wales,Australia,AUS,-34.4792,150.4181
+Jimboomba,Queensland,Australia,AUS,-27.8333,153.0333
+Colac,Victoria,Australia,AUS,-38.3403,143.5847
+Dalby,Queensland,Australia,AUS,-27.1833,151.2667
+Raymond Terrace,New South Wales,Australia,AUS,-32.7615,151.7441
+Esperance,Western Australia,Australia,AUS,-33.8611,121.8919
+Muswellbrook,New South Wales,Australia,AUS,-32.2654,150.8885
+Nelson Bay,New South Wales,Australia,AUS,-32.7150,152.1511
+Inverell,New South Wales,Australia,AUS,-29.7667,151.1167
+Parkes,New South Wales,Australia,AUS,-33.0950,148.2628
+Drouin,Victoria,Australia,AUS,-38.1333,145.8500
+Swan Hill,Victoria,Australia,AUS,-35.3333,143.5500
+Nambour,Queensland,Australia,AUS,-26.6269,152.9592
+Somerville,Victoria,Australia,AUS,-38.2260,145.1770
+Kingston,Tasmania,Australia,AUS,-42.9769,147.3083
+Casino,New South Wales,Australia,AUS,-28.8483,153.0511
+Mudgee,New South Wales,Australia,AUS,-32.6125,149.5872
+Mareeba,Queensland,Australia,AUS,-16.9833,145.4167
+Batemans Bay,New South Wales,Australia,AUS,-35.7081,150.1744
+Gracemere,Queensland,Australia,AUS,-23.4333,150.4500
+Samford,Queensland,Australia,AUS,-27.3667,152.8833
+Portland,Victoria,Australia,AUS,-38.3333,141.6000
+Young,New South Wales,Australia,AUS,-34.3000,148.3000
+Kingaroy,Queensland,Australia,AUS,-26.5333,151.8333
+Kangaroo Flat,Victoria,Australia,AUS,-36.8000,144.2500
+Mount Evelyn,Victoria,Australia,AUS,-37.7833,145.3833
+Bentley,Western Australia,Australia,AUS,-32.0010,115.9240
+Cowra,New South Wales,Australia,AUS,-33.8183,148.6578
+Hamilton,Victoria,Australia,AUS,-37.7333,142.0167
+Bowen,Queensland,Australia,AUS,-20.0167,148.2333
+Andergrove,Queensland,Australia,AUS,-21.0931,149.1860
+Moree,New South Wales,Australia,AUS,-29.4650,149.8344
+Gunnedah,New South Wales,Australia,AUS,-30.9667,150.2500
+Leeton,New South Wales,Australia,AUS,-34.5483,146.4011
+Mittagong,New South Wales,Australia,AUS,-34.4500,150.4500
+Tweed Heads,New South Wales,Australia,AUS,-28.1833,153.5500
+Benalla,Victoria,Australia,AUS,-36.5519,145.9817
+Emu Plains,New South Wales,Australia,AUS,-33.7483,150.6678
+Wallan,Victoria,Australia,AUS,-37.4167,144.9833
+Currumbin,Queensland,Australia,AUS,-28.1580,153.4690
+Bli Bli,Queensland,Australia,AUS,-26.6180,153.0370
+Moss Vale,New South Wales,Australia,AUS,-34.5483,150.3678
+Clifton Springs,Victoria,Australia,AUS,-38.1500,144.5667
+Katoomba,New South Wales,Australia,AUS,-33.7150,150.3120
+Wollert,Victoria,Australia,AUS,-37.5970,145.0330
+Kelso,New South Wales,Australia,AUS,-33.4186,149.6056
+Merrimac,New South Wales,Australia,AUS,-28.0500,153.3667
+Ayr,Queensland,Australia,AUS,-19.5744,147.4066
+Ararat,Victoria,Australia,AUS,-37.2833,142.9167
+Charters Towers,Queensland,Australia,AUS,-20.1000,146.2667
+Rye,Victoria,Australia,AUS,-38.3770,144.8380
+Moe,Victoria,Australia,AUS,-38.1722,146.2678
+Deniliquin,New South Wales,Australia,AUS,-35.5317,144.9344
+Darley,Victoria,Australia,AUS,-37.6547,144.4370
+Moranbah,Queensland,Australia,AUS,-22.0016,148.0533
+Forbes,New South Wales,Australia,AUS,-33.3833,148.0167
+Maryborough,Victoria,Australia,AUS,-37.0500,143.7350
+Springwood,New South Wales,Australia,AUS,-33.6967,150.5683
+Highfields,Queensland,Australia,AUS,-27.4581,151.9492
+Innisfail,Queensland,Australia,AUS,-17.5236,146.0292
+Mooroopna,Victoria,Australia,AUS,-36.3833,145.3500
+Narrabri,New South Wales,Australia,AUS,-30.3317,149.7678
+Kingscliff,New South Wales,Australia,AUS,-28.2564,153.5781
+Lesmurdie,Western Australia,Australia,AUS,-31.9940,116.0500
+Kilmore,Victoria,Australia,AUS,-37.2833,144.9500
+Yarrawonga,Victoria,Australia,AUS,-36.0167,146.0000
+Bargara,Queensland,Australia,AUS,-24.8205,152.4625
+Kiama,New South Wales,Australia,AUS,-34.6708,150.8542
+Bongaree,Queensland,Australia,AUS,-27.0814,153.1633
+Sanctuary Point,New South Wales,Australia,AUS,-35.1036,150.6267
+Kyabram,Victoria,Australia,AUS,-36.3167,145.0500
+Healesville,Victoria,Australia,AUS,-37.6561,145.5139
+Melton,Victoria,Australia,AUS,-37.6833,144.5833
+Burpengary,Queensland,Australia,AUS,-27.1442,153.0000
+Narre Warren North,Victoria,Australia,AUS,-37.9833,145.3167
+Mandurah,Western Australia,Australia,AUS,-32.5289,115.7231
+Kyneton,Victoria,Australia,AUS,-37.2333,144.4500
+Fremantle,Western Australia,Australia,AUS,-32.0569,115.7439
+Collie,Western Australia,Australia,AUS,-33.3630,116.1560
+North Tamborine,Queensland,Australia,AUS,-27.9694,153.1992
+Murwillumbah,New South Wales,Australia,AUS,-28.3333,153.3833
+Cootamundra,New South Wales,Australia,AUS,-34.6483,148.0344
+Bairnsdale,Victoria,Australia,AUS,-37.8333,147.6167
+Urraween,Queensland,Australia,AUS,-25.2955,152.8219
+Castlemaine,Victoria,Australia,AUS,-37.0636,144.2172
+Blaxland,New South Wales,Australia,AUS,-33.7453,150.6175
+Lennox Head,New South Wales,Australia,AUS,-28.7983,153.5844
+Bomaderry,New South Wales,Australia,AUS,-34.8480,150.6050
+Atherton,Queensland,Australia,AUS,-17.2658,145.4780
+Tuncurry,New South Wales,Australia,AUS,-32.1750,152.4989
+Strathalbyn,South Australia,Australia,AUS,-35.2667,138.9000
+Seymour,Victoria,Australia,AUS,-37.0300,145.1300
+Cannington,Western Australia,Australia,AUS,-32.0167,115.9500
+Wauchope,New South Wales,Australia,AUS,-31.4650,152.7344
+Helensburgh,New South Wales,Australia,AUS,-34.1833,151.0000
+Yass,New South Wales,Australia,AUS,-34.8203,148.9136
+Gatton,Queensland,Australia,AUS,-27.5611,152.2755
+Kurri Kurri,New South Wales,Australia,AUS,-32.8167,151.4833
+Cooma,New South Wales,Australia,AUS,-36.2350,149.1258
+Nuriootpa,South Australia,Australia,AUS,-34.4667,138.9833
+Tumut,New South Wales,Australia,AUS,-35.3039,148.2233
+Cannonvale,Queensland,Australia,AUS,-20.2863,148.6866
+Point Vernon,Queensland,Australia,AUS,-25.2538,152.8177
+Nambucca Heads,New South Wales,Australia,AUS,-30.6414,152.9906
+Wynyard,Tasmania,Australia,AUS,-41.0000,145.7167
+North Mackay,Queensland,Australia,AUS,-21.1216,149.1783
+Roma,Queensland,Australia,AUS,-26.5733,148.7869
+Stawell,Victoria,Australia,AUS,-37.0500,142.7667
+Beerwah,Queensland,Australia,AUS,-26.8556,152.9600
+Northam,Western Australia,Australia,AUS,-31.6531,116.6661
+Mount Cotton,Queensland,Australia,AUS,-27.6188,153.2210
+Alstonville,New South Wales,Australia,AUS,-28.8317,153.4344
+Margaret River,Western Australia,Australia,AUS,-33.9550,115.0750
+Glen Innes,New South Wales,Australia,AUS,-29.7500,151.7361
+Yamba,New South Wales,Australia,AUS,-29.4333,153.3500
+Waterford,Queensland,Australia,AUS,-27.6833,153.1330
+Gordonvale,Queensland,Australia,AUS,-17.0936,145.7866
+Kiama Downs,New South Wales,Australia,AUS,-34.6317,150.8511
+Pottsville,New South Wales,Australia,AUS,-28.3869,153.5608
+Chinchilla,Queensland,Australia,AUS,-26.7397,150.6250
+Lysterfield,Victoria,Australia,AUS,-37.9333,145.3000
+Cooranbong,New South Wales,Australia,AUS,-33.0740,151.4510
+Wentworth Falls,New South Wales,Australia,AUS,-33.7164,150.3772
+Scone,New South Wales,Australia,AUS,-32.0833,150.8500
+Beaudesert,Queensland,Australia,AUS,-27.9880,152.9958
+Dromana,Victoria,Australia,AUS,-38.3380,144.9650
+South Grafton,New South Wales,Australia,AUS,-29.7150,152.9344
+Kununurra,Western Australia,Australia,AUS,-15.7736,128.7386
+Naracoorte,South Australia,Australia,AUS,-36.9550,140.7429
+Corowa,New South Wales,Australia,AUS,-35.9942,146.3844
+Woolgoolga,New South Wales,Australia,AUS,-30.1150,153.2011
+Goondiwindi,Queensland,Australia,AUS,-28.5461,150.3097
+Cobram,Victoria,Australia,AUS,-35.9667,145.6500
+Maffra,Victoria,Australia,AUS,-37.9500,146.9830
+Tahmoor,New South Wales,Australia,AUS,-34.2233,150.5928
+Woodend,Victoria,Australia,AUS,-37.3630,144.5260
+Inverloch,Victoria,Australia,AUS,-38.6334,145.7278
+Whittlesea,Victoria,Australia,AUS,-37.5139,145.1140
+Emerald,Victoria,Australia,AUS,-37.9331,145.4370
+Richmond,New South Wales,Australia,AUS,-33.5983,150.7511
+New Norfolk,Tasmania,Australia,AUS,-42.7828,147.0594
+East Ballina,New South Wales,Australia,AUS,-28.8594,153.5872
+Biloela,Queensland,Australia,AUS,-24.4002,150.5133
+Worragee,New South Wales,Australia,AUS,-34.9144,150.6386
+Wingham,New South Wales,Australia,AUS,-31.8500,152.3670
+Leongatha,Victoria,Australia,AUS,-38.4833,145.9500
+Palmwoods,Queensland,Australia,AUS,-26.6883,152.9597
+Dunsborough,Western Australia,Australia,AUS,-33.6167,115.1000
+Irymple,Victoria,Australia,AUS,-34.2333,142.1667
+Red Cliffs,Victoria,Australia,AUS,-34.3075,142.1881
+Bannockburn,Victoria,Australia,AUS,-38.0500,144.1667
+Glenbrook,New South Wales,Australia,AUS,-33.7650,150.6267
+Smithfield Heights,Queensland,Australia,AUS,-16.8314,145.6910
+Sarina,Queensland,Australia,AUS,-21.4225,149.2175
+Byron Bay,New South Wales,Australia,AUS,-28.6483,153.6178
+Wonthaggi,Victoria,Australia,AUS,-38.6056,145.5917
+Ocean Shores,New South Wales,Australia,AUS,-28.5092,153.5375
+Berri,South Australia,Australia,AUS,-34.2833,140.6000
+Howard Springs,Northern Territory,Australia,AUS,-12.4922,131.0530
+Tannum Sands,Queensland,Australia,AUS,-23.9474,151.3675
+Victor Harbor,South Australia,Australia,AUS,-35.5500,138.6167
+Ingham,Queensland,Australia,AUS,-18.6500,146.1667
+Manjimup,Western Australia,Australia,AUS,-34.2411,116.1464
+Carnarvon,Western Australia,Australia,AUS,-24.8672,113.6611
+Smithton,Tasmania,Australia,AUS,-40.8440,145.1200
+Narrogin,Western Australia,Australia,AUS,-32.9360,117.1780
+Newman,Western Australia,Australia,AUS,-23.3539,119.7319
+Merimbula,New South Wales,Australia,AUS,-36.8983,149.9011
+Katanning,Western Australia,Australia,AUS,-33.6908,117.5553
+Weipa,Queensland,Australia,AUS,-12.6167,141.8667
+Wallaroo,South Australia,Australia,AUS,-33.9167,137.6167
+Central Coast,New South Wales,Australia,AUS,-33.4200,151.3000
+Proserpine,Queensland,Australia,AUS,-20.4017,148.5814
+Port Douglas,Queensland,Australia,AUS,-16.4834,145.4652
+Clare,South Australia,Australia,AUS,-33.8333,138.6000
+Tom Price,Western Australia,Australia,AUS,-22.6939,117.7950
+Charleville,Queensland,Australia,AUS,-26.4016,146.2383
+Cloncurry,Queensland,Australia,AUS,-20.7000,140.5000
+Bordertown,South Australia,Australia,AUS,-36.3118,140.7702
+Longreach,Queensland,Australia,AUS,-23.4422,144.2491
+Merredin,Western Australia,Australia,AUS,-31.4820,118.2790
+Scottsdale,Tasmania,Australia,AUS,-41.1667,147.5167
+Bourke,New South Wales,Australia,AUS,-30.0817,145.9511
+Exmouth,Western Australia,Australia,AUS,-21.9331,114.1281
+Queenstown,Tasmania,Australia,AUS,-42.0667,145.5500
+Mount Barker,Western Australia,Australia,AUS,-34.6300,117.6669
+Wagin,Western Australia,Australia,AUS,-33.3167,117.3500
+Kingston South East,South Australia,Australia,AUS,-36.8167,139.8500
+Tumby Bay,South Australia,Australia,AUS,-34.3667,136.1000
+Kalbarri,Western Australia,Australia,AUS,-27.7100,114.1600
+Port Denison,Western Australia,Australia,AUS,-29.2833,114.9167
+Penola,South Australia,Australia,AUS,-37.3786,140.8362
+Streaky Bay,South Australia,Australia,AUS,-32.8000,134.2167
+Halls Creek,Western Australia,Australia,AUS,-18.2300,127.6700
+Peterborough,South Australia,Australia,AUS,-32.9667,138.8333
+Ouyen,Victoria,Australia,AUS,-35.0667,142.3170
+Katherine,Northern Territory,Australia,AUS,-14.4667,132.2667
+Barcaldine,Queensland,Australia,AUS,-23.5555,145.2888
+Cowell,South Australia,Australia,AUS,-33.6833,136.9167
+Meningie,South Australia,Australia,AUS,-35.6883,139.3380
+Hughenden,Queensland,Australia,AUS,-20.8438,144.1986
+Meekatharra,Western Australia,Australia,AUS,-26.5931,118.4911
+Yulara,Northern Territory,Australia,AUS,-25.2406,130.9889
+Wyndham,Western Australia,Australia,AUS,-15.4825,128.1230
+Roebourne,Western Australia,Australia,AUS,-20.7667,117.1500
+Bicheno,Tasmania,Australia,AUS,-41.8667,148.2833
+Winton,Queensland,Australia,AUS,-22.3913,143.0381
+Oatlands,Tasmania,Australia,AUS,-42.3000,147.3706
+Leonora,Western Australia,Australia,AUS,-28.8800,121.3300
+Gingin,Western Australia,Australia,AUS,-31.3400,115.9100
+Wilcannia,New South Wales,Australia,AUS,-31.5650,143.3678
+Onslow,Western Australia,Australia,AUS,-21.6333,115.1167
+Laverton,Western Australia,Australia,AUS,-28.6280,122.4030
+Morawa,Western Australia,Australia,AUS,-29.2111,116.0090
+Southern Cross,Western Australia,Australia,AUS,-31.2500,119.3500
+Norseman,Western Australia,Australia,AUS,-32.1961,121.7780
+Ravensthorpe,Western Australia,Australia,AUS,-33.5831,120.0490
+Eidsvold,Queensland,Australia,AUS,-25.3667,151.1333
+Pannawonica,Western Australia,Australia,AUS,-21.6350,116.3360
+Kimba,South Australia,Australia,AUS,-33.1333,136.4170
+Mount Magnet,Western Australia,Australia,AUS,-28.0600,117.8460
+Three Springs,Western Australia,Australia,AUS,-29.5333,115.7170
+Theodore,Queensland,Australia,AUS,-24.9500,150.0833
+Karumba,Queensland,Australia,AUS,-17.4838,140.8397
+Richmond,Queensland,Australia,AUS,-20.7306,143.1422
+Andamooka,South Australia,Australia,AUS,-30.4470,137.1660
+Georgetown,Queensland,Australia,AUS,-18.3000,143.5500
+Boulia,Queensland,Australia,AUS,-22.9000,139.9000
+Adelaide River,Northern Territory,Australia,AUS,-13.2381,131.1061
+Burketown,Queensland,Australia,AUS,-17.7167,139.5667
+Ivanhoe,New South Wales,Australia,AUS,-32.8983,144.3000
+Thargomindah,Queensland,Australia,AUS,-28.0000,143.8167
+Pine Creek,Northern Territory,Australia,AUS,-13.8231,131.8330
+Camooweal,Queensland,Australia,AUS,-19.9167,138.1170
+Birdsville,Queensland,Australia,AUS,-25.8989,139.3520
+Bedourie,Queensland,Australia,AUS,-24.3500,139.4667
+Windorah,Queensland,Australia,AUS,-25.4206,142.6547
+Kingoonya,South Australia,Australia,AUS,-30.9000,135.3000
+Yanchep,Western Australia,Australia,AUS,-31.5500,115.6340
+Stanthorpe,Queensland,Australia,AUS,-28.6547,151.9350
+Bullsbrook,Western Australia,Australia,AUS,-31.6630,116.0300
+McMinns Lagoon,Northern Territory,Australia,AUS,-12.5329,131.0500
+Ceduna,South Australia,Australia,AUS,-32.1167,133.6667
+Quilpie,Queensland,Australia,AUS,-26.6161,144.2675
+Woomera,South Australia,Australia,AUS,-31.1496,136.8000
+Auckland,Auckland,New Zealand,NZL,-36.8500,174.7833
+Wellington,Wellington,New Zealand,NZL,-41.2889,174.7772
+Christchurch,Canterbury,New Zealand,NZL,-43.5309,172.6365
+Manukau City,Auckland,New Zealand,NZL,-37.0000,174.8850
+Northcote,Auckland,New Zealand,NZL,-36.7913,174.7758
+Waitakere,Auckland,New Zealand,NZL,-36.8490,174.5430
+Hamilton,Waikato,New Zealand,NZL,-37.7833,175.2833
+Tauranga,Bay of Plenty,New Zealand,NZL,-37.6858,176.1667
+Dunedin,Otago,New Zealand,NZL,-45.8667,170.5000
+Lower Hutt,Wellington,New Zealand,NZL,-41.2167,174.9167
+Palmerston North,Manawatu-Wanganui,New Zealand,NZL,-40.3549,175.6095
+Napier,Hawke’s Bay,New Zealand,NZL,-39.4833,176.9167
+Whangarei,Northland,New Zealand,NZL,-35.7250,174.3236
+Invercargill,Southland,New Zealand,NZL,-46.4290,168.3620
+Nelson,Nelson,New Zealand,NZL,-41.2931,173.2381
+Gisborne,Gisborne,New Zealand,NZL,-38.6625,178.0178
+Blenheim,Marlborough,New Zealand,NZL,-41.5167,173.9500
+Richmond,Tasman,New Zealand,NZL,-41.3333,173.1833
+Mosgiel,Otago,New Zealand,NZL,-45.8750,170.3480
+Whakatane,Bay of Plenty,New Zealand,NZL,-37.9640,176.9840
+Greymouth,West Coast,New Zealand,NZL,-42.4667,171.2000
+Stratford,Taranaki,New Zealand,NZL,-39.3410,174.2840
+Waitangi,Chatham Islands,New Zealand,NZL,-43.9510,-176.5610
+Porirua,Wellington,New Zealand,NZL,-41.1333,174.8500
+Rotorua,Bay of Plenty,New Zealand,NZL,-38.1378,176.2514
+New Plymouth,Taranaki,New Zealand,NZL,-39.0578,174.0742
+Upper Hutt,Wellington,New Zealand,NZL,-41.1333,175.0500
+Whanganui,Manawatu-Wanganui,New Zealand,NZL,-39.9333,175.0500
+Paraparaumu,Wellington,New Zealand,NZL,-40.9167,175.0167
+Timaru,Canterbury,New Zealand,NZL,-44.4000,171.2500
+Pukekohe East,Auckland,New Zealand,NZL,-37.1950,174.9481
+Taupo,Waikato,New Zealand,NZL,-38.6900,176.0800
+Masterton,Wellington,New Zealand,NZL,-40.9667,175.6500
+Rolleston,Canterbury,New Zealand,NZL,-43.5960,172.3830
+Cambridge,Waikato,New Zealand,NZL,-37.8833,175.4667
+Levin,Manawatu-Wanganui,New Zealand,NZL,-40.6250,175.2833
+Ashton,Canterbury,New Zealand,NZL,-44.0330,171.7720
+Feilding,Manawatu-Wanganui,New Zealand,NZL,-40.2250,175.5650
+Macetown,Otago,New Zealand,NZL,-44.8650,168.8190
+Havelock North,Hawke’s Bay,New Zealand,NZL,-39.6667,176.8833
+Waikanae,Wellington,New Zealand,NZL,-40.8760,175.0640
+Tokoroa,Waikato,New Zealand,NZL,-38.2200,175.8720
+Te Awamutu,Waikato,New Zealand,NZL,-38.0083,175.3250
+Hawera,Taranaki,New Zealand,NZL,-39.5833,174.2833
+Waiuku,Auckland,New Zealand,NZL,-37.2500,174.7333
+Te Puke,Bay of Plenty,New Zealand,NZL,-37.7833,176.3167
+Matamata,Waikato,New Zealand,NZL,-37.8097,175.7733
+Glencoe,Southland,New Zealand,NZL,-46.1920,168.6460
+Ngaruawahia,Waikato,New Zealand,NZL,-37.6680,175.1470
+Wanaka,Otago,New Zealand,NZL,-44.7081,169.1239
+Thames,Waikato,New Zealand,NZL,-37.1383,175.5375
+Lincoln,Canterbury,New Zealand,NZL,-43.6400,172.4860
+Kerikeri,Northland,New Zealand,NZL,-35.2244,173.9514
+Kawerau,Bay of Plenty,New Zealand,NZL,-38.0847,176.6996
+Waitara,Taranaki,New Zealand,NZL,-38.9958,174.2331
+Kaitaia,Northland,New Zealand,NZL,-35.1125,173.2628
+Whitianga,Waikato,New Zealand,NZL,-36.8331,175.6997
+Cromwell,Otago,New Zealand,NZL,-45.0400,169.2000
+Katikati,Bay of Plenty,New Zealand,NZL,-37.5500,175.9167
+Warkworth,Auckland,New Zealand,NZL,-36.4000,174.6667
+Alexandra,Otago,New Zealand,NZL,-45.2492,169.3797
+Marton,Manawatu-Wanganui,New Zealand,NZL,-40.0692,175.3783
+Tuakau,Waikato,New Zealand,NZL,-37.2667,174.9500
+Waihi,Waikato,New Zealand,NZL,-37.3930,175.8320
+Dargaville,Northland,New Zealand,NZL,-35.9333,173.8833
+Turangi,Waikato,New Zealand,NZL,-38.9890,175.8100
+Westport,West Coast,New Zealand,NZL,-41.7550,171.5990
+Renwick,Marlborough,New Zealand,NZL,-41.5099,173.8282
+Hokitika,West Coast,New Zealand,NZL,-42.7167,170.9667
+Te Anau,Southland,New Zealand,NZL,-45.4167,167.7167
+Kaikoura,Canterbury,New Zealand,NZL,-42.4000,173.6814
+Halfmoon Bay,Southland,New Zealand,NZL,-46.8990,168.1270
+Kairaki,Canterbury,New Zealand,NZL,-43.3850,172.7030

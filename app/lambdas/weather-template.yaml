@@ -1,0 +1,314 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Weather Lambda lambda_functions
+
+Parameters:
+  # General parameters
+  DataCatalogName:
+    Type: String
+  ExpectedObjectNumber:
+    Type: String
+  GlueDBName:
+    Type: String
+  InputDataPrefix:
+    Type: String
+  LambdaInputDataName:
+    Type: String
+  QueryResultPrefix:
+    Type: String
+  S3BucketName:
+    Type: String
+  SQLLocationPrefix:
+    Type: String
+  # Weather parameters
+  WeatherQueueArn:
+    Type: String
+  WeatherQueueUrl:
+    Type: String
+  WeatherDLQArn:
+    Type: String
+  OpenWeatherSecretName:
+    Type: String
+  WeatherRawPrefix:
+    Type: String
+  WeatherRawTableName:
+    Type: String
+
+Globals:
+  Function:
+    Runtime: python3.9
+    Timeout: 900
+    Environment:
+      Variables:
+        MY_AWS_REGION: !Ref AWS::Region
+        S3_BUCKET: !Ref S3BucketName
+
+Resources:
+  CountObjectsWeatherRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: CountObjectsWeatherRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+
+  CountObjectsWeather:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_functions/objects_in_s3.lambda_handler
+      Role: !GetAtt CountObjectsWeatherRole.Arn
+      MemorySize: 128
+      Environment:
+        Variables:
+          BASE_PREFIX: !Ref WeatherRawPrefix
+
+  CitiesToSQSWeatherRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: CitiesToSQSWeatherRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource:
+                - !Ref WeatherQueueArn
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+              - Effect: Allow
+                Action:
+                  - cloudwatch:*
+                Resource:
+                  - '*'
+
+  CitiesToSQSWeather:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_functions/cities_to_sqs.lambda_handler
+      Role: !GetAtt CitiesToSQSWeatherRole.Arn
+      MemorySize: 128
+      Environment:
+        Variables:
+          LAMBDA_INPUT_DATA: !Ref LambdaInputDataName
+          INPUT_DATA_PREFIX: !Ref InputDataPrefix
+          SQS_QUEUE_URL: !Ref WeatherQueueUrl
+
+  SQSToWeatherApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: SQSToWeatherApiRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                  - s3:GetBucketVersioning
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource:
+                - !Ref WeatherQueueArn
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource:
+                  - !Ref WeatherDLQArn
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${OpenWeatherSecretName}'
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+              - Effect: Allow
+                Action:
+                  - cloudwatch:GetMetricData
+                  - cloudwatch:ListMetrics
+                Resource:
+                  - '*'
+
+  SQSToWeatherApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_functions/sqs_to_weather_api.lambda_handler
+      Role: !GetAtt SQSToWeatherApiRole.Arn
+      MemorySize: 128
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref WeatherQueueUrl
+          WEATHER_RAW_PREFIX: !Ref WeatherRawPrefix
+
+  SQSEventWeatherInvoke:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 10
+      Enabled: True
+      EventSourceArn: !Ref WeatherQueueArn
+      FunctionName: !GetAtt SQSToWeatherApi.Arn
+      MaximumBatchingWindowInSeconds: 5
+
+  DataTestsWeatherRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Policies:
+          - PolicyName: DataTestsWeatherRole
+            PolicyDocument:
+              Version: 2012-10-17
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:PutObject
+                    - s3:GetObject
+                    - s3:ListBucket
+                    - s3:GetBucketLocation
+                  Resource:
+                    - !Sub 'arn:aws:s3:::${S3BucketName}'
+                    - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+                    - !Sub 'arn:aws:s3:::${S3BucketName}/${WeatherRawPrefix}/*'
+                    - !Sub 'arn:aws:s3:::${S3BucketName}/${QueryResultPrefix}/*'
+                - Effect: Allow
+                  Action:
+                    - logs:PutLogEvents
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                  Resource:
+                    - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                    - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+                - Effect: Allow
+                  Action:
+                    - athena:StartQueryExecution
+                    - athena:StopQueryExecution
+                    - athena:GetQueryExecution
+                    - athena:GetQueryResults
+                    - athena:GetWorkGroup
+                  Resource:
+                    - !Sub 'arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/primary'
+                - Effect: Allow
+                  Action:
+                    - glue:GetTable
+                    - glue:GetTables
+                    - glue:GetDatabase
+                    - glue:GetDatabases
+                    - glue:GetPartition
+                    - glue:GetPartitions
+                    - glue:SearchTables
+                  Resource:
+                    - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                    - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDBName}'
+                    - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDBName}/${WeatherRawTableName}'
+
+  DataTestsWeather:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_functions/data_tests_weather.lambda_handler
+      Role: !GetAtt DataTestsWeatherRole.Arn
+      MemorySize: 128
+      Environment:
+        Variables:
+          DATA_CATALOG_NAME: !Ref DataCatalogName
+          EXPECTED_OBJECT_NUMBER: !Ref ExpectedObjectNumber
+          GLUE_DB_NAME: !Ref GlueDBName
+          WEATHER_RAW_TABLE_NAME: !Ref WeatherRawTableName
+          QUERY_RESULT_LOCATION: !Ref QueryResultPrefix
+          SQL_LOCATION_PREFIX: !Ref SQLLocationPrefix
+
+Outputs:
+  CitiesToSQSWeatherArn:
+    Value: !GetAtt CitiesToSQSWeather.Arn
+  CountObjectsWeatherArn:
+    Value: !GetAtt CountObjectsWeather.Arn
+  DataTestsWeatherArn:
+    Value: !GetAtt DataTestsWeather.Arn
+  DataTestsWeatherName:
+    Value: !Ref DataTestsWeather
+  SQSToWeatherApiArn:
+    Value: !GetAtt SQSToWeatherApi.Arn
+  SQSToWeatherApiName:
+    Value: !Ref SQSToWeatherApi

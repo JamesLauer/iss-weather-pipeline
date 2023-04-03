@@ -1,0 +1,221 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Passes step function
+
+Parameters:
+  CitiesToSQSPassesArn:
+    Type: String
+  CountObjectsPassesArn:
+    Type: String
+  DataCatalogName:
+    Type: String
+  ExpectedObjectNumber:
+    Type: String
+  GlueDBName:
+    Type: String
+  PassesGlueCompactionName:
+    Type: String
+  DataTestsPassesArn:
+    Type: String
+  PassesRawPrefix:
+    Type: String
+  PassesRawTableName:
+    Type: String
+  QueryResultPrefix:
+    Type: String
+  S3BucketName:
+    Type: String
+
+Resources:
+  PassesSFRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - !Sub 'states.${AWS::Region}.amazonaws.com'
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: PassesSFPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Ref CitiesToSQSPassesArn
+                  - !Ref CountObjectsPassesArn
+                  - !Ref DataTestsPassesArn
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:CreateBucket
+                  - s3:GetBucketLocation
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/${PassesRawPrefix}/*'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/${QueryResultPrefix}/*'
+              - Effect: Allow
+                Action:
+                  - athena:StartQueryExecution
+                  - athena:StopQueryExecution
+                  - athena:GetQueryExecution
+                  - athena:GetQueryResults
+                  - athena:GetWorkGroup
+                Resource:
+                  - !Sub 'arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/primary'
+              - Effect: Allow
+                Action:
+                  - glue:BatchCreatePartition
+                  - glue:CreateTable
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:SearchTables
+                  - glue:StartJobRun
+                  - glue:GetJobRun
+                  - glue:GetJobRuns
+                  - glue:BatchStopJobRun
+                Resource:
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDBName}'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDBName}/${PassesRawTableName}'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:job/${PassesGlueCompactionName}'
+              - Effect: Allow
+                Action:
+                  - cloudwatch:*
+                Resource:
+                  - '*'
+
+  PassesSF:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString:
+        !Sub
+        - |-
+          {
+            "StartAt": "L-1_1: objects_in_s3",
+            "States": {
+              "L-1_1: objects_in_s3": {
+                "Type": "Task",
+                "Resource": "${CountObjectsPassesArnSub}",
+                "Comment": "Counts objects in today's S3 prefix",
+                "Next": "Has pipeline already been run today?"
+              },
+              "Has pipeline already been run today?": {
+                "Type": "Choice",
+                "Choices": [
+                 {
+                    "Variable": "$.objects",
+                    "NumericEquals": ${ExpectedObjectNumberSub},
+                    "Next": "Yes - raise error"
+                  },
+                  {
+                    "Variable": "$.objects",
+                    "NumericLessThan": ${ExpectedObjectNumberSub},
+                    "Next": "No - start pipeline"
+                  }
+                ]
+              },
+              "Yes - raise error": {
+                "Type": "Fail",
+                "Cause": "Objects already in prefix"
+              },
+              "No - start pipeline": {
+                "Type": "Pass",
+                "Next": "L-1_2: cities_to_sqs_queue"
+              },
+              "L-1_2: cities_to_sqs_queue": {
+                "Type": "Task",
+                "Resource": "${CitiesToSQSPassesArnSub}",
+                "Comment": "Sends city data to iss_passes_queue_test_1 for ISS passes",
+                "Next": "L-1_3: iss_passes_queue"
+              },
+              "L-1_3: iss_passes_queue": {
+                "Type": "Pass",
+                "Comment": "Lambda function that is invoked asynchronously from SQS",
+                "Next": "Wait for all messages to be processed"
+              },
+              "Wait for all messages to be processed": {
+                "Type": "Wait",
+                "Seconds": 60,
+                "Comment": "Waits for all iss_passes_queue messages to be processed by CitiesToISSApi lambda function",
+                "Next": "G-1_1: passes_json_compact"
+              },
+              "G-1_1: passes_json_compact": {
+                "Type": "Task",
+                "Resource": "arn:aws:states:::glue:startJobRun.sync",
+                "Parameters": {
+                  "JobName": "${PassesGlueCompactionNameSub}"
+                },
+                "Next": "A-1_1: passes_raw_table"
+              },
+              "A-1_1: passes_raw_table": {
+                "Type": "Task",
+                "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+                "Parameters": {
+                  "WorkGroup": "primary",
+                 "QueryExecutionContext": {
+                  "Catalog": "${DataCatalogNameSub}",
+                  "Database": "${GlueDBNameSub}"
+                  },
+                  "ResultConfiguration": {
+                     "OutputLocation": "s3://${S3BucketNameSub}/${QueryResultPrefixSub}"
+                  },
+                  "QueryString": "CREATE EXTERNAL TABLE IF NOT EXISTS ${PassesRawTableNameSub} (city string, lat double, lon double, region string, country string, satid int, satname string, transactionscount int, passescount int, startaz double, startazcompass string, startel double, startutc int, maxaz double, maxazcompass string, maxel double, maxutc int, endaz double, endazcompass string, endel double, endutc int, mag double, duration int, startvisibility int) PARTITIONED BY (year string, month string, day string) STORED AS PARQUET LOCATION 's3://${S3BucketNameSub}/${PassesRawPrefixSub}'"
+                  },
+                "Next": "A-1_2: MSCK repair ${PassesRawTableNameSub}"
+              },
+              "A-1_2: MSCK repair ${PassesRawTableNameSub}": {
+                "Type": "Task",
+                "Resource": "arn:aws:states:::athena:startQueryExecution.sync",
+                "Parameters": {
+                  "WorkGroup": "primary",
+                  "QueryExecutionContext": {
+                    "Catalog": "${DataCatalogNameSub}",
+                    "Database": "${GlueDBNameSub}"
+                    },
+                  "ResultConfiguration": {
+                     "OutputLocation": "s3://${S3BucketNameSub}/${QueryResultPrefixSub}"
+                  },
+                  "QueryString": "MSCK REPAIR TABLE ${PassesRawTableNameSub}"
+                },
+                     "Next": "L-1_4: passes_data_tests"
+              },
+              "L-1_4: passes_data_tests": {
+                "Type": "Task",
+                "Resource": "${DataTestsPassesArnSub}",
+                "Comment": "Checks quality of data in silver passes table",
+                "End": true
+              }
+            }
+          }
+        - CountObjectsPassesArnSub: !Ref CountObjectsPassesArn
+          CitiesToSQSPassesArnSub: !Ref CitiesToSQSPassesArn
+          DataCatalogNameSub: !Ref DataCatalogName
+          ExpectedObjectNumberSub: !Ref ExpectedObjectNumber
+          GlueDBNameSub: !Ref GlueDBName
+          DataTestsPassesArnSub: !Ref DataTestsPassesArn
+          PassesGlueCompactionNameSub: !Ref PassesGlueCompactionName
+          PassesRawPrefixSub: !Sub ${PassesRawPrefix}_compacted
+          PassesRawTableNameSub: !Ref PassesRawTableName
+          QueryResultPrefixSub: !Ref QueryResultPrefix
+          S3BucketNameSub: !Ref S3BucketName
+      RoleArn: !GetAtt PassesSFRole.Arn
+
+Outputs:
+  PassesSFArn:
+    Value: !GetAtt PassesSF.Arn
+  PassesSFName:
+    Value: !Ref PassesSF

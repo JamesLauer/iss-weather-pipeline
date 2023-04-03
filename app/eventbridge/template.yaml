@@ -1,0 +1,126 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Eventbridge rules for step lambda_functions
+
+Parameters:
+  # Passes parameters
+  PassesSFArn:
+    Type: String
+  # Weather parameters
+  WeatherSFArn:
+    Type: String
+  # Final table parameters
+  CreateUpdateFinalTableArn:
+    Type: String
+  CreateUpdateFinalTableName:
+    Type: String
+  DataTestsFinalArn:
+    Type: String
+  DataTestsFinalName:
+    Type: String
+
+Resources:
+  PassesSFInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - Fn::Sub: events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: PassesSFExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: states:StartExecution
+                Resource:
+                  - !Ref PassesSFArn
+
+  PassesSFInvoke:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Invokes PassesSF step function every day at specified UTC time
+      ScheduleExpression: cron(0 16 */1 * ? *)
+      State: ENABLED
+      Targets:
+        - Arn: !Ref PassesSFArn
+          Id: PassesSFid
+          RoleArn: !GetAtt PassesSFInvokeRole.Arn
+
+  WeatherSFInvokeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - Fn::Sub: events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: WeatherSFExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: states:StartExecution
+                Resource:
+                  - !Ref WeatherSFArn
+
+  WeatherSFInvoke:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Invokes WeatherSF step function every day at specified UTC time
+      ScheduleExpression: cron(0 16 */1 * ? *)
+      State: ENABLED
+      Targets:
+        - Arn: !Ref WeatherSFArn
+          Id: WeatherSFid
+          RoleArn: !GetAtt WeatherSFInvokeRole.Arn
+
+  CreateUpdateFinalTableInvoke:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Invokes CreateUpdateFinalTable Lambda function every day at specified UTC time
+      # Scheduled time should be minimum 2 hours after the step lambda_functions above run
+      ScheduleExpression: cron(0 18 */1 * ? *)
+      State: ENABLED
+      Targets:
+        - Arn: !Ref CreateUpdateFinalTableArn
+          Id: CreateUpdateFinalTableID
+
+  CreateUpdateFinalTableInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CreateUpdateFinalTableName
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt CreateUpdateFinalTableInvoke.Arn
+
+  DataTestsFinalInvoke:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Invokes DataTestsFinal Lambda function every day at specified UTC time
+      # Scheduled time should be minimum 5 min after the CreateUpdateFinalTableInvoke
+      # lambda function above
+      ScheduleExpression: cron(5 18 */1 * ? *)
+      State: ENABLED
+      Targets:
+        - Arn: !Ref DataTestsFinalArn
+          Id: DataTestsFinalID
+
+  DataTestsFinalInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DataTestsFinalName
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DataTestsFinalInvoke.Arn

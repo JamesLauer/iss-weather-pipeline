@@ -1,0 +1,378 @@
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+  CF_BUCKET: iss-aus-cf-${{ secrets.AWS_ACCOUNT_ID }}
+  S3_BUCKET: iss-aus-${{ secrets.AWS_ACCOUNT_ID }}
+  STACK: iss-aus
+  DATA_SRC_INPUT: app/s3/input_data
+  DATA_DEST_INPUT: input_data
+  DATA_SRC_GLUE: app/glue/glue_scripts
+  DATA_DEST_GLUE: glue_scripts
+  DATA_SRC_SQL: app/lambdas/sql_scripts
+  DATA_DEST_SQL: sql_scripts
+
+jobs:
+  delete-previous-e2e-test-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deletes data from S3 bucket after completion of tests
+        run: |
+          aws s3 rm s3://$S3_BUCKET-test --recursive
+          echo "S3 bucket data and bucket delete successful"
+      - name: Disable Eventbridge cron job rules so that pipeline doesn't run
+        run: |
+          rules=$(aws events list-rules | jq -r '.Rules[].Name')
+          for rule in $rules; do
+            if [[ "$rule" == *"$STACK-test"* ]]; then
+              aws events disable-rule --name "$rule"
+              echo "Disabled rule: $rule"
+            fi
+          done
+
+  create-cf-S3-e2e-test-bucket:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Create CloudFormation e2e test bucket
+        continue-on-error: true
+        run: |
+          aws s3 mb s3://$CF_BUCKET-test
+
+  run-unit-integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+          cache: pip
+          architecture: x64
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Install Python dependencies
+        uses: py-actions/py-dependency-install@v3
+        with:
+          path: .github/workflows/requirements.txt
+      - name: Run unit and integration tests
+        run: |
+          python -m unittest discover -v ./tests/unit  -p test_*.py
+          python -m unittest discover -v ./tests/integration  -p test_*.py
+
+  lint-cf-yaml-files:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+        - name: Setup Cloud Formation Linter with Latest Version
+          uses: scottbrenner/cfn-lint-action@v2
+        - name: Print the Cloud Formation Linter Version & run Linter.
+          run: |
+            cfn-lint --version
+            cfn-lint template.yaml -i W
+            cfn-lint app/**/*.yaml -i W
+
+  build-deploy-aws-e2e-test-env:
+    needs:
+    - delete-previous-e2e-test-data
+    - create-cf-S3-e2e-test-bucket
+    - lint-cf-yaml-files
+    - run-unit-integration-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+          cache: pip
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - run: sam build --use-container
+      - run: sam validate
+      # Parameter overrides in SAM deploy used to create the e2e test pipeline
+      - run: |
+          sam deploy \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --stack-name "${STACK}-test" \
+            --s3-bucket "${CF_BUCKET}-test" \
+            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+            --region ${{ secrets.AWS_REGION }} \
+            --parameter-overrides \
+              LambdaInputDataName=AUNZ_cities_5_test.csv \
+              ExpectedObjectNumber=5 \
+              S3BucketName="${S3_BUCKET}-test" \
+              GlueDBName=iss_db_aus_test \
+              FinalTableName=final_table_aus_test \
+              PassesQueueName=iss_passes_queue_aus_test \
+              PassesRawPrefix=iss_passes_raw_json_test \
+              PassesRawTableName=iss_passes_raw_table_test \
+              WeatherQueueName=iss_weather_queue_aus_test \
+              WeatherRawPrefix=iss_weather_raw_json_test \
+              WeatherRawTableName=iss_weather_raw_table_test
+
+  upload-e2e-test-input-data-to-s3:
+    needs: build-deploy-aws-e2e-test-env
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ env.S3_BUCKET }}-test
+          source_dir: ${{ env.DATA_SRC_INPUT }}
+          destination_dir: ${{ env.DATA_DEST_INPUT }}
+
+  upload-e2e-test-glue-scripts-to-s3:
+    needs: build-deploy-aws-e2e-test-env
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ env.S3_BUCKET }}-test
+          source_dir: ${{ env.DATA_SRC_GLUE }}
+          destination_dir: ${{ env.DATA_DEST_GLUE }}
+
+  upload-e2e-test-sql-scripts-to-s3:
+    needs: build-deploy-aws-e2e-test-env
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ env.S3_BUCKET }}-test
+          source_dir: ${{ env.DATA_SRC_SQL }}
+          destination_dir: ${{ env.DATA_DEST_SQL }}
+
+  run-e2e-test-PassesSF:
+    needs:
+    - upload-e2e-test-input-data-to-s3
+    - upload-e2e-test-glue-scripts-to-s3
+    - upload-e2e-test-sql-scripts-to-s3
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get PassesSF arns
+        id: get_PassesSFArn
+        run: |
+          PassesSFArn=$(aws stepfunctions list-state-machines | jq -r '.stateMachines[] | select(.name | contains("PassesSF")) | .stateMachineArn')
+            for arn in $PassesSFArn; do
+              tags=$(aws stepfunctions list-tags-for-resource --resource-arn $arn | jq -r '.tags[] | select(.value | contains("test"))')
+              if [[ -n $tags ]]; then
+                  echo "::set-output name=PassesSFArn::$arn"
+                  break
+                fi
+              done
+      - name: Run PassesSF step function
+        run: |
+          aws stepfunctions start-execution --state-machine-arn "$PASSES_SF_ARN"
+        env:
+          PASSES_SF_ARN: ${{ steps.get_PassesSFArn.outputs.PassesSFArn }}
+      - name: Wait for step function to complete
+        run: sleep 360s
+        shell: bash
+
+  run-e2e-test-WeatherSF:
+    needs:
+    - upload-e2e-test-input-data-to-s3
+    - upload-e2e-test-glue-scripts-to-s3
+    - upload-e2e-test-sql-scripts-to-s3
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get WeatherSF arns
+        id: get_WeatherSFArn
+        run: |
+          WeatherSFArn=$(aws stepfunctions list-state-machines | jq -r '.stateMachines[] | select(.name | contains("WeatherSF")) | .stateMachineArn')
+            for arn in $WeatherSFArn; do
+              tags=$(aws stepfunctions list-tags-for-resource --resource-arn $arn | jq -r '.tags[] | select(.value | contains("test"))')
+              if [[ -n $tags ]]; then
+                  echo "::set-output name=WeatherSFArn::$arn"
+                  break
+                fi
+              done
+      - name: Run WeatherSF step function
+        run: |
+          aws stepfunctions start-execution --state-machine-arn "$WEATHER_SF_ARN"
+        env:
+          WEATHER_SF_ARN: ${{ steps.get_WeatherSFArn.outputs.WeatherSFArn }}
+      - name: Wait for step function to complete
+        run: sleep 360s
+        shell: bash
+
+  run-e2e-test-CreateUpdateFinalTable:
+    needs:
+      - run-e2e-test-PassesSF
+      - run-e2e-test-WeatherSF
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get CreateUpdateFinalTable name
+        id: get_CreateUpdateFinalTableName
+        run: |
+          CreateUpdateFinalTableName=$(aws lambda list-functions | jq -r --arg stack "$STACK-test" '.Functions[] | select(.FunctionName | contains($stack) and contains("CreateUpdateFinalTable")) | .FunctionName')
+          echo "::set-output name=CreateUpdateFinalTableName::$CreateUpdateFinalTableName"
+      - name: Run CreateUpdateFinalTable Lambda function
+        run: |
+          aws lambda invoke \
+            --function-name "$CREATE_UPDATE_FINAL_TABLE_NAME" \
+            --invocation-type RequestResponse outfile.txt
+        env:
+          CREATE_UPDATE_FINAL_TABLE_NAME: ${{ steps.get_CreateUpdateFinalTableName.outputs.CreateUpdateFinalTableName }}
+      - name: Wait for Lambda function to complete
+        run: sleep 120s
+        shell: bash
+
+  run-e2e-test-DataTestsFinal:
+    needs: run-e2e-test-CreateUpdateFinalTable
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get DataTestsFinal name
+        id: get_DataTestsFinalName
+        run: |
+          DataTestsFinalName=$(aws lambda list-functions | jq -r --arg stack "$STACK-test" '.Functions[] | select(.FunctionName | contains($stack) and contains("DataTestsFinal")) | .FunctionName')
+          echo "::set-output name=DataTestsFinalName::$DataTestsFinalName"
+      - name: Run DataTestsFinal Lambda function
+        run: |
+          aws lambda invoke \
+            --function-name "$CREATE_UPDATE_FINAL_TABLE_NAME" \
+            --invocation-type RequestResponse outfile.txt
+        env:
+          CREATE_UPDATE_FINAL_TABLE_NAME: ${{ steps.get_DataTestsFinalName.outputs.DataTestsFinalName }}
+      - name: Wait for Lambda function to complete
+        run: sleep 60s
+        shell: bash
+
+  detect-e2e-test-fails:
+    needs: run-e2e-test-DataTestsFinal
+    runs-on: ubuntu-latest
+    steps:
+      - name: Detects if fails have occurred in CloudWatch logs
+        run: |
+          log_groups=$(aws logs describe-log-groups | jq -r --arg stack "$STACK-test" '.logGroups[] | select(.logGroupName | contains($stack)) | .logGroupName')
+          start_time=$(date -u -d "10 minutes ago" +"%s%3N")
+          for log_group in $log_groups; do
+            if aws logs filter-log-events --log-group-name $log_group --start-time "$start_time" --filter-pattern="?FAIL ?ERROR" | grep -q -e "ERROR" -e "FAIL"; then
+              echo "Found ERROR or FAIL in $log_group"
+              exit 1
+            fi
+          echo "No ERROR or FAIL in log groups"
+          done
+
+  disable-e2e-eventbridge-rules:
+    needs: run-e2e-test-DataTestsFinal
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gets names of EventBridge e2e test scheduled rules (crons)
+        id: get_RuleName
+        run: |
+          RuleName=$(aws events list-rules | jq -r --arg stack "$STACK-test" '.Rules[] | select(.Name | contains($stack)) | .Name')
+          echo "::set-output name=RuleName::$RuleName"
+      - name: Disables the e2e test stack cron jobs so CreateUpdateFinalTable and DataTestsFinal do not run
+        run: |
+          aws events disable-rule \
+            --name "$EVENTBRIDGE_RULE_NAME"
+        env:
+          EVENTBRIDGE_RULE_NAME: ${{ steps.get_RuleName.outputs.RuleName }}
+
+  disable-e2e-cloudwatch-alarm-actions:
+    needs: run-e2e-test-DataTestsFinal
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gets names of CloudWatch e2e test alarms
+        id: get_AlarmNames
+        run: |
+          AlarmNames=$(aws cloudwatch describe-alarms | jq -r --arg stack "$STACK-test" '[.MetricAlarms[] | select(.AlarmName | contains($stack)) | .AlarmName] | join(",")')
+          echo "::set-output name=AlarmNames::$AlarmNames"
+      - name: Disables the e2e test CloudWatch alarm actions (i.e. email notifications)
+        run: |
+          IFS=',' read -ra ALARM_NAMES <<< "${CLOUDWATCH_ALARM_NAMES}"
+          for alarm_name in "${ALARM_NAMES[@]}"; do
+            aws cloudwatch disable-alarm-actions --alarm-names "${alarm_name}"
+          done
+        env:
+          CLOUDWATCH_ALARM_NAMES: ${{ steps.get_AlarmNames.outputs.AlarmNames }}
+
+  build-deploy-aws-pipeline:
+    needs: detect-e2e-test-fails
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+          cache: pip
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws-region: ${{ secrets.AWS_REGION}}
+      - run: sam build --use-container
+      - run: sam validate
+      - run: |
+          sam deploy \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --stack-name $STACK \
+            --s3-bucket $CF_BUCKET \
+            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+            --region $AWS_DEFAULT_REGION \
+            --parameter-overrides \
+              S3BucketName="${S3_BUCKET}" \
+
+  upload-input-data-to-s3:
+    needs: build-deploy-aws-pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ env.S3_BUCKET }}
+          source_dir: ${{ env.DATA_SRC_INPUT }}
+          destination_dir: ${{ env.DATA_DEST_INPUT }}
+
+  upload-glue-scripts-to-s3:
+    needs: build-deploy-aws-pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ env.S3_BUCKET }}
+          source_dir: ${{ env.DATA_SRC_GLUE }}
+          destination_dir: ${{ env.DATA_DEST_GLUE }}
+
+  upload-sql-scripts-to-s3:
+    needs: build-deploy-aws-pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ env.S3_BUCKET }}
+          source_dir: ${{ env.DATA_SRC_SQL }}
+          destination_dir: ${{ env.DATA_DEST_SQL }}

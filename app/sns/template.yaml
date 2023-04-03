@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SNS topic for CloudWatch alarms
+
+Parameters:
+  SNSSubscriptionEmail:
+    Type: String
+
+Resources:
+  CWAlarmSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref SNSSubscriptionEmail
+          Protocol: email
+
+Outputs:
+  CWAlarmSNSTopicArn:
+    Value: !Ref CWAlarmSNSTopic

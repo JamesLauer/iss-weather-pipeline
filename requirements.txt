@@ -1,0 +1,5 @@
+boto3==1.24.66
+moto==4.1.6
+cfn-lint==0.75.1
+radon==6.0.1
+coverage==7.2.2

@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Create SQS queues for storing location messages and invoking lambdas
+
+Parameters:
+  # Passes parameters
+  PassesQueueName:
+    Type: String
+  # Weather parameters
+  WeatherQueueName:
+    Type: String
+
+Resources:
+  PassesDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${PassesQueueName}_DLQ'
+      MessageRetentionPeriod: 86400
+
+  PassesQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref PassesQueueName
+      DelaySeconds: 5
+      MessageRetentionPeriod: 86400
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 900
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PassesDLQ.Arn
+        maxReceiveCount: 3
+
+  WeatherDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub '${WeatherQueueName}_DLQ'
+      MessageRetentionPeriod: 86400
+
+  WeatherQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref WeatherQueueName
+      DelaySeconds: 5
+      MessageRetentionPeriod: 86400
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 900
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt WeatherDLQ.Arn
+        maxReceiveCount: 3
+
+Outputs:
+  # Passes outputs
+  PassesQueueUrl:
+    Value: !GetAtt PassesQueue.QueueUrl
+  PassesQueueArn:
+    Value: !GetAtt PassesQueue.Arn
+  PassesDLQArn:
+    Value: !GetAtt PassesDLQ.Arn
+  # Weather outputs
+  WeatherQueueUrl:
+    Value: !GetAtt WeatherQueue.QueueUrl
+  WeatherQueueArn:
+    Value: !GetAtt WeatherQueue.Arn
+  WeatherDLQArn:
+    Value: !GetAtt WeatherDLQ.Arn

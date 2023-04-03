@@ -1,0 +1,223 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Passes Lambda lambda_functions
+
+Parameters:
+  # General parameters
+  DataCatalogName:
+    Type: String
+  FinalTableName:
+    Type: String
+  GlueDBName:
+    Type: String
+  QueryResultPrefix:
+    Type: String
+  S3BucketName:
+    Type: String
+  SQLLocationPrefix:
+    Type: String
+  # Passes parameters
+  PassesRawPrefix:
+    Type: String
+  PassesRawTableName:
+    Type: String
+  # Weather parameters
+  WeatherRawPrefix:
+    Type: String
+  WeatherRawTableName:
+    Type: String
+
+Globals:
+  Function:
+    Runtime: python3.9
+    Timeout: 900
+    Environment:
+      Variables:
+        MY_AWS_REGION: !Ref AWS::Region
+        S3_BUCKET: !Ref S3BucketName
+
+Resources:
+  CreateUpdateFinalTableRole:
+        Type: AWS::IAM::Role
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                    - lambda.amazonaws.com
+                Action:
+                  - sts:AssumeRole
+          Policies:
+            - PolicyName: CreateUpdateFinalTableRole
+              PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Effect: Allow
+                    Action:
+                      - s3:GetBucketLocation
+                      - s3:GetObject
+                      - s3:ListBucket
+                      - s3:PutObject
+                    Resource:
+                      - !Sub 'arn:aws:s3:::${S3BucketName}'
+                      - !Sub 'arn:aws:s3:::${S3BucketName}/${PassesRawPrefix}/*'
+                      - !Sub 'arn:aws:s3:::${S3BucketName}/${QueryResultPrefix}/*'
+                      - !Sub 'arn:aws:s3:::${S3BucketName}/${WeatherRawPrefix}/*'
+                      - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+                      - "*"
+                  - Effect: Allow
+                    Action:
+                      - logs:CreateLogGroup
+                      - logs:CreateLogStream
+                      - logs:PutLogEvents
+                    Resource:
+                      - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                      - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+                  - Effect: Allow
+                    Action:
+                      - athena:GetQueryExecution
+                      - athena:GetQueryResults
+                      - athena:GetWorkGroup
+                      - athena:StartQueryExecution
+                      - athena:StopQueryExecution
+                    Resource:
+                      - !Sub 'arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/primary'
+                  - Effect: Allow
+                    Action:
+                      - glue:BatchCreatePartition
+                      - glue:CreateTable
+                      - glue:GetDatabase
+                      - glue:GetDatabases
+                      - glue:GetPartition
+                      - glue:GetPartitions
+                      - glue:GetTable
+                      - glue:GetTables
+                      - glue:SearchTables
+                    Resource:
+                      - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                      - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDBName}'
+                      - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDBName}/${FinalTableName}'
+                      - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDBName}/${PassesRawTableName}'
+                      - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDBName}/${WeatherRawTableName}'
+                  - Effect: Allow
+                    Action:
+                      - cloudwatch:GetMetricData
+                      - cloudwatch:ListMetrics
+                    Resource:
+                      - '*'
+
+  CreateUpdateFinalTable:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_functions/create_update_final_table.lambda_handler
+      Role: !GetAtt CreateUpdateFinalTableRole.Arn
+      MemorySize: 128
+      Environment:
+        Variables:
+          DATA_CATALOG_NAME: !Ref DataCatalogName
+          FINAL_TABLE_NAME: !Ref FinalTableName
+          GLUE_DB_NAME: !Ref GlueDBName
+          PASSES_RAW_TABLE_NAME: !Ref PassesRawTableName
+          QUERY_RESULT_LOCATION: !Ref QueryResultPrefix
+          WEATHER_RAW_TABLE_NAME: !Ref WeatherRawTableName
+          SQL_LOCATION_PREFIX: !Ref SQLLocationPrefix
+
+  DataTestsFinalRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: DataTestsFinalRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:PutObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/${PassesRawPrefix}/*'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/${QueryResultPrefix}/*'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/${WeatherRawPrefix}/*'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+              - Effect: Allow
+                Action:
+                  - athena:GetQueryExecution
+                  - athena:GetQueryResults
+                  - athena:GetWorkGroup
+                  - athena:StartQueryExecution
+                  - athena:StopQueryExecution
+                Resource:
+                  - !Sub 'arn:aws:athena:${AWS::Region}:${AWS::AccountId}:workgroup/primary'
+              - Effect: Allow
+                Action:
+                  - glue:BatchCreatePartition
+                  - glue:CreateTable
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:SearchTables
+                Resource:
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:catalog'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDBName}'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDBName}/${FinalTableName}'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDBName}/${PassesRawTableName}'
+                  - !Sub 'arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDBName}/${WeatherRawTableName}'
+              - Effect: Allow
+                Action:
+                  - cloudwatch:GetMetricData
+                  - cloudwatch:ListMetrics
+                Resource:
+                  - '*'
+
+  DataTestsFinal:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_functions/data_tests_final.lambda_handler
+      Role: !GetAtt DataTestsFinalRole.Arn
+      MemorySize: 128
+      Environment:
+        Variables:
+          DATA_CATALOG_NAME: !Ref DataCatalogName
+          FINAL_TABLE_NAME: !Ref FinalTableName
+          GLUE_DB_NAME: !Ref GlueDBName
+          PASSES_RAW_TABLE_NAME: !Ref PassesRawTableName
+          QUERY_RESULT_LOCATION: !Ref QueryResultPrefix
+          WEATHER_RAW_TABLE_NAME: !Ref WeatherRawTableName
+          SQL_LOCATION_PREFIX: !Ref SQLLocationPrefix
+
+Outputs:
+  CreateUpdateFinalTableArn:
+    Value: !GetAtt CreateUpdateFinalTable.Arn
+  CreateUpdateFinalTableName:
+    Value: !Ref CreateUpdateFinalTable
+  DataTestsFinalArn:
+    Value: !GetAtt DataTestsFinal.Arn
+  DataTestsFinalName:
+    Value: !Ref DataTestsFinal

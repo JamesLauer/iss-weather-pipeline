@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: Creates Glue DB for Athena to query
+
+Parameters:
+  # General parameters
+  GlueDBName:
+    Type: String
+  GlueScriptPrefix:
+    Type: String
+  S3BucketName:
+    Type: String
+  # Passes parameters
+  PassesGlueScriptName:
+    Type: String
+  PassesRawPrefix:
+    Type: String
+  # Weather parameters
+  WeatherGlueScriptName:
+    Type: String
+  WeatherRawPrefix:
+    Type: String
+
+Resources:
+  GlueDB:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: !Ref GlueDBName
+
+  PassesGlueRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: PassesGluePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                  - s3:GetBucketVersioning
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+
+  PassesGlueCompaction:
+    Type: AWS::Glue::Job
+    Properties:
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub 's3://${S3BucketName}/${GlueScriptPrefix}/${PassesGlueScriptName}'
+      Role: !Ref PassesGlueRole
+      GlueVersion: 3.0
+      WorkerType: G.1X
+      NumberOfWorkers: 2
+      Timeout: 5
+      DefaultArguments:
+        --JOB_NAME: passes_compaction
+        --S3_BUCKET_NAME: !Ref S3BucketName
+        --PASSES_RAW_PREFIX: !Ref PassesRawPrefix
+        --enable-job-insights: true
+        --job-language: python
+      Description: Job to compact S3 files
+
+  WeatherGlueRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: WeatherGluePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                  - s3:GetBucketVersioning
+                Resource:
+                  - !Sub 'arn:aws:s3:::${S3BucketName}'
+                  - !Sub 'arn:aws:s3:::${S3BucketName}/*'
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:*:log-stream:*'
+
+  WeatherGlueCompaction:
+    Type: AWS::Glue::Job
+    Properties:
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub 's3://${S3BucketName}/${GlueScriptPrefix}/${WeatherGlueScriptName}'
+      Role: !Ref WeatherGlueRole
+      GlueVersion: 3.0
+      WorkerType: G.1X
+      NumberOfWorkers: 2
+      Timeout: 5
+      DefaultArguments:
+        --JOB_NAME: weather_compaction
+        --S3_BUCKET_NAME: !Sub ${S3BucketName}
+        --WEATHER_RAW_PREFIX: !Sub ${WeatherRawPrefix}
+        --enable-job-insights: true
+        --job-language: python
+      Description: Job to compact S3 files
+
+Outputs:
+  GlueDBName:
+    Value: !Ref GlueDBName
+  PassesGlueCompactionName:
+    Value: !Ref PassesGlueCompaction
+  WeatherGlueCompactionName:
+    Value: !Ref WeatherGlueCompaction

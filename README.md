@@ -391,13 +391,13 @@ Kinesis, they can still be used for this project.
 
 * AWS_ACCESS_KEY_ID: enter your AWS account access key
 * AWS_SECRET_ACCESS_KEY: enter your AWS account secret access key
-* AWS_REGION: enter your region, this should be the same as used in step 5 when creating the CloudFormation stack S3 bucket
+* AWS_REGION: enter your region
 * AWS_ACCOUNT_ID: enter your AWS account id
 
 5. Go to https://www.n2yo.com/login/register/ and register for an N2YO account. Once registered, log in to get your api license key. Take note of
    this key because we'll be using it later.
-6. Go to https://home.openweathermap.org/users/sign_up and register for an OpenWeather account. Once registered, sign in to api license key for
-   the free plan. Take note of this key because we'll be using it later.
+6. Go to https://home.openweathermap.org/users/sign_up and register for an OpenWeather account. Once registered, sign in to get your api license 
+   key for the free plan. Take note of this key because we'll be using it later.
 7. Go to your AWS accounts console, search Secrets Manager and then go to the console page. Store a new secret then click on "Other type of
    secret". Under"Key/value pairs", enter the following secrets. Note that the names must be the SAME as shown below. If not then delete the secret
    and enter again.

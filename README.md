@@ -4,7 +4,7 @@ Source: NASA
 ## ISS Weather Pipeline Summary
 
 This pipeline takes in Australia and New Zealand city data (e.g. country, region, lat, lon, timezone etc.), feeds this data into a satellite tracker
-API (N2YO) and weather API (OpenWeather) and produces a one big table (OBT) showing the weather conditions when the International Space Station (ISS) 
+API (N2YO) and weather API (OpenWeather) and produces a one big table (OBT) showing the weather conditions when the International Space Station (ISS)
 passes over a particular city.
 
 It is a complicated project with many moving parts, therefore, patience will be required to understand how everything links together.
@@ -39,8 +39,8 @@ Click to view
 ## Project Objective
 
 The primary objective of this project was to learn about data engineering and its key concepts by building a data pipeline. As not only a beginner
-to data engineering but also programming, it was identified at various points throughout the project that in order for this project to succeed and 
-for others to learn from this project, that software development and software engineering best practices had to be incorporated as much as possible. 
+to data engineering but also programming, it was identified at various points throughout the project that in order for this project to succeed and
+for others to learn from this project, that software development and software engineering best practices had to be incorporated as much as possible.
 Examples of this include infrastructure-as-code (IaC) and testing, both of which have hugely benefited the project and my learning.
 
 Whilst every attempt has been made to create a project that is "technically correct", given that there are many ways to do the same "thing", there
@@ -164,17 +164,17 @@ committing and pushing the latest code changes to GitHub. For the unit tests, Py
 Python functions used in the AWS Lambda functions. For the integration tests, AWS's Moto package (which mocks AWS resources) was used to detect
 errors in the functions that use AWS's Boto3 package. The unit and integration tests can be seen in the tests/ directory.
 
-For e2e testing, this occurs within GitHub Actions by invoking Step Functions, Lambda functions and other AWS microservices using the AWS CLI with 
-bash scripting, which is pre-installed into GitHub Actions. The e2e test works by deploying the same CloudFormation template as what's used in the 
-final stack with certain parameters changed via the parameter-overrides flag in AWS SAM. Examples include the test file to be used, which only 
-contains 5 cities instead of all the cities and "-test" added to the end of certain resource parameters to differentiate them from the final 
+For e2e testing, this occurs within GitHub Actions by invoking Step Functions, Lambda functions and other AWS microservices using the AWS CLI with
+bash scripting, which is pre-installed into GitHub Actions. The e2e test works by deploying the same CloudFormation template as what's used in the
+final stack with certain parameters changed via the parameter-overrides flag in AWS SAM. Examples include the test file to be used, which only
+contains 5 cities instead of all the cities and "-test" added to the end of certain resource parameters to differentiate them from the final
 resources. Following deployment of the e2e stack, the SF-1_1: PassesSF and SF-2_1: WeatherSF Step Functions are invoked and then the L-3_1:
 create_update_final_table and L-3_2: data_tests_final_table are invoked. At this point, GitHub Actions won't know if there's a failure on the AWS
-side, therefore, the CloudWatch logs are parsed to determine if "ERROR" or "FAIL" keywords (the "FAIL" keyword is logged when a data test fails) 
-appear, if so, the GitHub Actions worflow fails and the subsequent steps, which includes the deployment of the final CloudFormation stack, does 
-not occur. Additionally, there are workflow jobs that disable the e2e stacks EventBridge rules and CloudWatch alarms so that the test stack's 
-pipeline is not invoked and errors aren't logged, and also a workflow job that deletes the test stacks S3 data at the start of the workflow. This 
-ensures that the workflow can be run on Git push each time without failing because of objects already existing in the test S3 bucket. 
+side, therefore, the CloudWatch logs are parsed to determine if "ERROR" or "FAIL" keywords (the "FAIL" keyword is logged when a data test fails)
+appear, if so, the GitHub Actions worflow fails and the subsequent steps, which includes the deployment of the final CloudFormation stack, does
+not occur. Additionally, there are workflow jobs that disable the e2e stacks EventBridge rules and CloudWatch alarms so that the test stack's
+pipeline is not invoked and errors aren't logged, and also a workflow job that deletes the test stacks S3 data at the start of the workflow. This
+ensures that the workflow can be run on Git push each time without failing because of objects already existing in the test S3 bucket.
 
 See .github/workflows/actions-pipeline.yaml for the e2e tests.
 
@@ -244,12 +244,12 @@ just with slightly different Lambda functions, Glue jobs and Athena queries.
 <details>
   <summary>More detail</summary>
 
-The first task "L-1_1: objects_in_s3" is used to count the number of objects in the bucket. If it is = 431 (i.e. the number of cities in the 
+The first task "L-1_1: objects_in_s3" is used to count the number of objects in the bucket. If it is = 431 (i.e. the number of cities in the
 Australia and New Zealand input data csv file) then this indicates that the pipeline has been run already today. If this is the case
 then the pipeline fails in order to avoid making excessive API calls for that day and to avoid overwriting the data. If the data must be
 overwritten, then the Lambda Functions can be run manually.
 
-Also note that a pass state is used for "L-1_3: sqs_to_iss_api" due to the Lambda function being invoked by "L-1_2: City data to SQS queue". Given 
+Also note that a pass state is used for "L-1_3: sqs_to_iss_api" due to the Lambda function being invoked by "L-1_2: City data to SQS queue". Given
 that it doesn't need to be invoked by the Step Function, a pass state is used as an indicator.
 
 </details>
@@ -331,14 +331,14 @@ can be invoked asynchronously.
 
 ### AWS SQS
 
-By implementing an SQS queue, the Lambda function responsible for sending get requests to the APIs was able to be invoked asynchronously resulting 
-in the ability to horizontally scale the number of API requests made. For example, if using one Lambda for all get requests to OpenWeather API, it 
-took approx. 9 min for 431 requests. If the number of cities were to scale up (e.g. 40,000 locations), it would well and truly exceed the Lambda 
-function 15 min run limit. When using an SQS queue to asynchronously invoke the Lambda function with 10 SQS messages per batch, it took approx. 1 
+By implementing an SQS queue, the Lambda function responsible for sending get requests to the APIs was able to be invoked asynchronously resulting
+in the ability to horizontally scale the number of API requests made. For example, if using one Lambda for all get requests to OpenWeather API, it
+took approx. 9 min for 431 requests. If the number of cities were to scale up (e.g. 40,000 locations), it would well and truly exceed the Lambda
+function 15 min run limit. When using an SQS queue to asynchronously invoke the Lambda function with 10 SQS messages per batch, it took approx. 1
 min for 431 requests.
 
-Note that for the free account OpenWeather API, the limit is stated as 60 calls per minute, however, completing 431 calls in a minute was  able to 
-be achieved. When scaling up to e.g. 40,000 locations, it may be that there are rate limits in place that would cause the pipeline to fail. This 
+Note that for the free account OpenWeather API, the limit is stated as 60 calls per minute, however, completing 431 calls in a minute was able to
+be achieved. When scaling up to e.g. 40,000 locations, it may be that there are rate limits in place that would cause the pipeline to fail. This
 should be considered in the design phase of the project.
 
 <img alt="img_2.png" height="300" src="docs/img/request-time.png" width="500"/>
@@ -383,8 +383,8 @@ Kinesis, they can still be used for this project.
 
 1. Clone this repository to your local hard drive.
 2. Set up the repository as a project in your IDE or code editor and git initialise it
-3. Create a repository for this project in your GitHub account and then on the instruction page, copy and paste the code from the "...or push an
-   existing repository from the command line" option into your terminal. Note that the first commit will fail in GitHub Actions because the
+3. Create a repository for this project in your GitHub account and then on the instruction page, copy and paste the code from the ".…or create a new
+   repository on the command line" option into your terminal. Note that the first commit will fail in GitHub Actions because the
    project hasn't been set up correctly yet.
 4. In the project's repository, go to Settings > Security > Secrets and then Variables > Actions and then create the following
    secrets. Note that the names must be the SAME as shown below. If not then the names can be changed in .github/workflows/actions-pipeline.yaml.
@@ -396,7 +396,7 @@ Kinesis, they can still be used for this project.
 
 5. Go to https://www.n2yo.com/login/register/ and register for an N2YO account. Once registered, log in to get your api license key. Take note of
    this key because we'll be using it later.
-6. Go to https://home.openweathermap.org/users/sign_up and register for an OpenWeather account. Once registered, sign in to get your api license 
+6. Go to https://home.openweathermap.org/users/sign_up and register for an OpenWeather account. Once registered, sign in to get your api license
    key for the free plan. Take note of this key because we'll be using it later.
 7. Go to your AWS accounts console, search Secrets Manager and then go to the console page. Store a new secret then click on "Other type of
    secret". Under"Key/value pairs", enter the following secrets. Note that the names must be the SAME as shown below. If not then delete the secret
@@ -426,3 +426,12 @@ Kinesis, they can still be used for this project.
 10. Git commit and push the project again and then go to Actions in the repository to view the status of the jobs. Note that the whole pipeline
     may take up to 30 min to run on the first attempt then around 20 min on each subsequent attempt.
 11. When GitHub Actions finishes successfully, the pipeline will run at the times specified in app/eventbridge/template.yaml.
+
+### Tear Down Project
+1. Go to the S3 console and empty the contents of each bucket created when deploying the project. This should include:
+* bucket-cf-123456789101
+* bucket-cf-123456789101-test
+* bucket-123456789101
+* bucket-123456789101-test
+* 
+2. Go to the CloudFormation console, carefully select the projects stacks you want to delete and then click on delete. 

@@ -1,4 +1,4 @@
-![](docs/img/iss-cover-image.jpg)
+![](https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/iss-cover-image.jpg)
 Source: NASA
 
 ## ISS Weather Pipeline Summary
@@ -6,8 +6,6 @@ Source: NASA
 This pipeline takes in Australia and New Zealand city data (e.g. country, region, lat, lon, timezone etc.), feeds this data into a satellite tracker
 API (N2YO) and weather API (OpenWeather) and produces a one big table (OBT) showing the weather conditions when the International Space Station (ISS)
 passes over a particular city.
-
-It is a complicated project with many moving parts, therefore, patience will be required to understand how everything links together.
 
 This pipeline costs approx. $5 US per month to run for around 430 cities and data is gathered every day therefore querying in Athena is not
 available until the first lot of data has been ingested and loaded to the Glue tables. The cost to scale it has not been estimated yet, however,
@@ -23,7 +21,7 @@ it is not expected to scale linearly.
 * Data quality tests e.g. check that all cities are processed, check for duplicates etc. - *AWS Lambda and Athena*
 * Dashboarding - *MS Power BI*
 
-<a href="https://drive.google.com/file/d/1DDS9q6c3yyCzSugG224Mylcf79ydL5Q3/view?usp=sharing"><img src="docs/img/pfd.svg" style="max-width:100%;"></a>
+<a href="https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/pfd.svg" style="max-width:100%;"></a>
 Click to view
 
 ## Table of Contents
@@ -35,6 +33,8 @@ Click to view
 [Selection of AWS Microservices](#Selection-of-AWS-Microservices)<br />
 [Dashboard](#Dashboard)<br />
 [Deploy Project](#Deploy-Project)<br />
+[Changelog](#Changelog)<br />
+[Licence](#Licence)<br />
 
 ## Project Objective
 
@@ -71,7 +71,7 @@ A csv file containing Australia and New Zealand city location data (e.g. country
 See https://simplemaps.com/data/world-cities for the original "Basic" dataset that was used. The key data in this csv file is the latitude and
 longitude, which is used as inputs into both APIs.
 
-![img.png](docs/img/input_data.png)
+![](https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/input_data.png)
 
 *Note: The US has also been included, see app/s3/input data for the input data files*
 
@@ -91,9 +91,14 @@ city.
 N2YO has a rate limit of 1000 requests/hr as standard (this can be increased upon approval by N2YO admin), whilst OpenWeather has 1000
 requests/day under their free tier. As such, the 431 Australia and New Zealand city locations fall within the rate limits of these APIs.
 
-![](docs/img/n2yo_api_data.png?style=centreme) ![](docs/img/openweather_api_data.png?style=centreme)
+![](https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/n2yo_api_data.png?style=centreme) ![](https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/openweather_api_data.png?style=centreme)
 
 ## Pipeline Features
+
+For more information about the project's CI/CD, IaC, security, testing, idempotency, logging, alerting, and other features, click "More detail" below.
+
+<details>
+  <summary>More detail</summary>
 
 ### CI/CD
 
@@ -105,8 +110,8 @@ like the invoking of the step and Lambda functions are included as part of the e
 
 The GitHub Actions workflow template is located at .github/workflows/actions-pipeline.yaml.
 
-![img.png](docs/img/gh_actions_1.png)
-![img.png](docs/img/gh_actions_2.png)
+![](https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/gh_actions_1.png)
+![](https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/gh_actions_2.png)
 
 ### IaC
 
@@ -254,7 +259,7 @@ that it doesn't need to be invoked by the Step Function, a pass state is used as
 
 </details>
 
-**<img alt="img_2.png" height="700" src="docs/img/stepfunctions_passes_graph.svg" width="450"/>**
+**<img alt="" height="700" src="https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/stepfunctions_passes_graph.svg" width="450"/>**
 
 ### Logging and Alerting
 
@@ -313,6 +318,8 @@ as a different type to what was in the originally inferred destination table and
 way of fixing this problem at the time, therefore, the above method was used instead, which from research appears to be the most common method of
 ingesting data from S3, anyway.
 
+</details>
+
 ## Selection of AWS Microservices
 
 As this is an AWS project and as there are many AWS microservices existing within the AWS product range, it is important that the AWS microservices
@@ -341,7 +348,7 @@ Note that for the free account OpenWeather API, the limit is stated as 60 calls 
 be achieved. When scaling up to e.g. 40,000 locations, it may be that there are rate limits in place that would cause the pipeline to fail. This
 should be considered in the design phase of the project.
 
-<img alt="img_2.png" height="300" src="docs/img/request-time.png" width="500"/>
+<img alt="" height="300" src="https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/request-time.png" width="500"/>
 
 ### AWS Step Functions
 
@@ -367,7 +374,7 @@ complexity due to the need to create the required Lambda function resources and 
 A dashboard was created in MS Power BI as it has the Simba connector that can be used for AWS Athena. The dashboard was a minor part of the
 project and a web link to view the final dashboard may be included at a later date.
 
-![](docs/img/dashboard.png)
+![](https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/dashboard.png)
 
 ## Deploy Project
 
@@ -433,5 +440,13 @@ Kinesis, they can still be used for this project.
 * bucket-cf-123456789101-test
 * bucket-123456789101
 * bucket-123456789101-test
-* 
+
 2. Go to the CloudFormation console, carefully select the projects stacks you want to delete and then click on delete. 
+
+## Changelog
+v1.0.0 - 22/04/2023
+* Project versioning started
+* Updated documentation
+
+## License
+This project is distributed under the MIT License. See LICENSE in project's root directory for more information.

@@ -1,6 +1,4 @@
 .aws-sam
 .idea
 .coverage
-__pycache__
-tests/integration/__pycache__
-tests/unit/__pycache__
+/**/__pycache__

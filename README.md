@@ -21,8 +21,8 @@ it is not expected to scale linearly.
 * Data quality tests e.g. check that all cities are processed, check for duplicates etc. - *AWS Lambda and Athena*
 * Dashboarding - *MS Power BI*
 
-<a href="https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/pfd.svg" style="max-width:100%;"></a>
-Click to view
+![](https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/pfd.svg)
+
 
 ## Table of Contents
 

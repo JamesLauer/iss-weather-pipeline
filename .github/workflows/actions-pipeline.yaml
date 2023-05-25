@@ -3,7 +3,7 @@ on:
     branches:
       - main
   schedule:
-    - cron '0 0 * * SAT'
+    - cron: '0 0 * * SAT'
 
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

@@ -109,6 +109,10 @@ This includes the setup of an S3 bucket for the CloudFormation stack, running of
 template files, deployment of the AWS microservices and uploading of the input data, glue scripts and SQL scripts to S3. Additionally, other jobs
 like the invoking of the step and Lambda functions are included as part of the e2e testing that is also incorporated into the CI/CD pipeline.
 
+The GitHub Actions workflow file has been configured to run on both git push and on a cron schedule of once per week. The reason for the cron 
+schedule is to test that the workflow runners are still working correctly. If there's been changes that need to be fixed then there'll be a failure 
+notification email sent to the GitHub account email address. 
+
 The GitHub Actions workflow template is located at .github/workflows/actions-pipeline.yaml.
 
 ![](https://raw.githubusercontent.com/JamesLauer/iss-weather-pipeline/main/docs/img/gh_actions_1.png)

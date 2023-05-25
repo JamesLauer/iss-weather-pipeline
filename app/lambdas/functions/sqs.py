@@ -9,7 +9,9 @@ logger.setLevel(logging.INFO)
 
 
 def send_city_list_to_sqs_queue(
-    region_env: str, data: list, queue_url_env: str
+    region_env: str,
+    data: list,
+    queue_url_env: str
 ) -> dict:
     """
     Iterates through city input data list and sends each city/row to an SQS queue

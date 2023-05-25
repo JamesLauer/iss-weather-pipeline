@@ -7,7 +7,7 @@ This pipeline takes in Australia and New Zealand city data (e.g. country, region
 API (N2YO) and weather API (OpenWeather) and produces a one big table (OBT) showing the weather conditions when the International Space Station (ISS)
 passes over a particular city.
 
-This pipeline costs approx. $5 US per month to run for around 430 cities and data is gathered every day therefore querying in Athena is not
+This pipeline costs approx. $4 US per month to run for around 430 cities and data is gathered every day therefore querying in Athena is not
 available until the first lot of data has been ingested and loaded to the Glue tables. The cost to scale it has not been estimated yet, however,
 it is not expected to scale linearly.
 
@@ -28,20 +28,21 @@ it is not expected to scale linearly.
 
 [Project Objective](#Project-Objective)<br />
 [Pipeline Objective](#Pipeline-Objective)<br />
+[Future Improvements](#Future-Improvements)<br />
 [Data Sources](#Data-Sources)<br />
 [Pipeline Features](#Pipeline-Features)<br />
 [Selection of AWS Microservices](#Selection-of-AWS-Microservices)<br />
 [Dashboard](#Dashboard)<br />
 [Deploy Project](#Deploy-Project)<br />
 [Changelog](#Changelog)<br />
-[Licence](#Licence)<br />
+[License](#License)<br />
 
 ## Project Objective
 
-The primary objective of this project was to learn about data engineering and its key concepts by building a data pipeline. As not only a beginner
-to data engineering but also programming, it was identified at various points throughout the project that in order for this project to succeed and
-for others to learn from this project, that software development and software engineering best practices had to be incorporated as much as possible.
-Examples of this include infrastructure-as-code (IaC) and testing, both of which have hugely benefited the project and my learning.
+The primary objective of this project was to learn about data engineering and its key concepts by building a data pipeline. It was identified at 
+various points throughout the project that in order for this project to succeed and for others to learn from this project, that software 
+development and software engineering best practices had to be incorporated as much as possible. Examples of this include infrastructure-as-code 
+(IaC) and testing, both of which have hugely benefited the project and my learning.
 
 Whilst every attempt has been made to create a project that is "technically correct", given that there are many ways to do the same "thing", there
 are no doubt elements that people with disagree with (e.g. using CloudFormation for IaC!). I do however hope that others can learn a great deal
@@ -60,7 +61,7 @@ New Zealand (However, this project can also be used for the US as well, and othe
 This pipeline has been designed so that:
 
 * It can run without a computer running (i.e. it is run automatically in the cloud daily with no manual operation required)
-* It is serverless, which means that the microservices are externally managed and costs are only incurred when the microservices are used
+* It is serverless, which means that the microservices are externally managed and costs are only incurred when the microservices are run
 * The number of countries and cities can be scaled easily (subject to API limits)
 
 ## Data Sources
@@ -115,8 +116,8 @@ The GitHub Actions workflow template is located at .github/workflows/actions-pip
 
 ### IaC
 
-IaC for the AWS microservices occurred using CloudFormation templates that were built and deployed using AWS's Serverless Application Model (SAM)
-package. Whilst SAM was designed for serverless applications, it can also be used to deploy any AWS microservice specified in CloudFormation
+IaC for the AWS microservices is implemented using CloudFormation templates that were built and deployed using AWS's Serverless Application Model 
+(SAM) package. Whilst SAM was designed for serverless applications, it can also be used to deploy any AWS microservice specified in CloudFormation
 templates. Additionally, nested stacks have been used so that instead of one very long template.yaml file, there are many smaller templates,
 therefore making it more manageable.
 
@@ -132,9 +133,9 @@ AWS keys and AWS Secrets Manager for API keys, and encryption and bucket version
 Access to AWS resources is provided by IAM access roles and permissions. If a user is not setup correctly to
 interact with these AWS resources, they may not be able to perform the required work at the required time (i.e. don't
 have required permissions) or at worst, may be given too much access resulting in accidental damage to the pipeline or
-data. Every effort was made to set up each resource's policies with least privilege as opposed to using '*' on the action and resource, or using the
+data. Every effort was made to set up each resource's policies with least privilege as opposed to using ```*``` on the action and resource, or using the
 AWS managed policies. In both cases, these can result in too many priveleges given to the user. The exception to this was the CloudWatch Lambda
-Function alarms where resources were specified as '*' due to circular dependencies.
+Function alarms where resources were specified as ```*``` due to circular dependencies.
 
 Least privileges can be seen in the CloudFormation template .yaml files in the app directory.
 
@@ -148,8 +149,8 @@ Key security can be seen in .github/workflows/actions-pipeline.yaml, app/Lambdas
 app/Lambdas/functions/functions.py
 
 **Encryption** -
-All objects in S3 bucket are automatically encrypted by S3 using their default server-side encryption "Amazon S3-managed keys" SSE-S3. Even though
-the data in S3 is not considered sensitive or confidential, and as a personal learning project does not need to meet industry or regulatory
+All objects in the S3 buckets are automatically encrypted by S3 using their default server-side encryption "Amazon S3-managed keys" SSE-S3. Even 
+though the data in S3 is not considered sensitive or confidential, and as a personal learning project does not need to meet industry or regulatory
 requirements, it is good practice to consider encryption as it forms a critical component of data privacy and security.
 
 Encryption is automatically applied to S3 buckets on creation.
@@ -169,17 +170,19 @@ committing and pushing the latest code changes to GitHub. For the unit tests, Py
 Python functions used in the AWS Lambda functions. For the integration tests, AWS's Moto package (which mocks AWS resources) was used to detect
 errors in the functions that use AWS's Boto3 package. The unit and integration tests can be seen in the tests/ directory.
 
-For e2e testing, this occurs within GitHub Actions by invoking Step Functions, Lambda functions and other AWS microservices using the AWS CLI with
+For e2e testing, this occurs within GitHub Actions by invoking Step unctions, Lambda functions and other AWS microservices using the AWS CLI with
 bash scripting, which is pre-installed into GitHub Actions. The e2e test works by deploying the same CloudFormation template as what's used in the
 final stack with certain parameters changed via the parameter-overrides flag in AWS SAM. Examples include the test file to be used, which only
 contains 5 cities instead of all the cities and "-test" added to the end of certain resource parameters to differentiate them from the final
-resources. Following deployment of the e2e stack, the SF-1_1: PassesSF and SF-2_1: WeatherSF Step Functions are invoked and then the L-3_1:
-create_update_final_table and L-3_2: data_tests_final_table are invoked. At this point, GitHub Actions won't know if there's a failure on the AWS
-side, therefore, the CloudWatch logs are parsed to determine if "ERROR" or "FAIL" keywords (the "FAIL" keyword is logged when a data test fails)
-appear, if so, the GitHub Actions worflow fails and the subsequent steps, which includes the deployment of the final CloudFormation stack, does
-not occur. Additionally, there are workflow jobs that disable the e2e stacks EventBridge rules and CloudWatch alarms so that the test stack's
-pipeline is not invoked and errors aren't logged, and also a workflow job that deletes the test stacks S3 data at the start of the workflow. This
-ensures that the workflow can be run on Git push each time without failing because of objects already existing in the test S3 bucket.
+resources. 
+
+Following deployment of the e2e stack, the SF-1_1: PassesSF and SF-2_1: WeatherSF Step Functions are invoked and then the L-3_1:
+create_update_final_table and L-3_2: data_tests_final_table are invoked. At this point, GitHub Actions won't know if there's a failure on the AWS 
+side, therefore, the CloudWatch logs are parsed to determine if "ERROR"  or "FAIL" keywords (the "FAIL" keyword is logged when a data test fails) 
+appear, if so, the GitHub Actions workflow fails and the subsequent steps, which includes the deployment of the final CloudFormation stack, does 
+not occur. Additionally, there are workflow jobs that disable the e2e stack's EventBridge rules and CloudWatch alarms so that the test stack's 
+pipeline is not invoked and errors aren't logged. Additionally, there's a workflow job that deletes the test stack's S3 data at the start of the 
+workflow. This ensures that the workflow can be run on Git push each time without failing because of objects already existing in the test S3 bucket.
 
 See .github/workflows/actions-pipeline.yaml for the e2e tests.
 
@@ -287,7 +290,7 @@ The setup of the CloudWatch alarms can be seen in app/cloudwatch/template.yaml.
 To improve query performance in Athena, the 431 json files that are written to S3 each day from the L-1_3 "sqs_to_iss_api" and L-2_3
 "sqs_to_weather_api" Lambda functions were compacted (i.e. joined together into a larger file) using a Glue Spark job. Without the compaction,
 each time Athena queries the individual json files in the S3 bucket, it opens, reads and closes each json file resulting in extended query times
-due to the extra overhead, and more S3 reads, both of which increase costs. Whilst the 431 small json files that are ingested daily from each api is
+due to the extra overhead, and more S3 reads, both of which increase costs. Whilst the 431 small json files that are ingested daily from each API is
 hardly going to effect performance or cost, if this project were to be scaled up significantly to include cities from all around the world,
 performance and cost could suffer considerably.
 
@@ -325,26 +328,25 @@ ingesting data from S3, anyway.
 As this is an AWS project and as there are many AWS microservices existing within the AWS product range, it is important that the AWS microservices
 selected are appropriate for the type and size of the source data and also appropriate for the end use case.
 
-The selection of the microservices used in this project was based on self research and through trial and error, and may not be the most
-appropriate but should also not be the least appropriate. Reasons for selection of the microservices is explained in More detail.
+Reasons for selection of the microservices are explained in More detail.
 
 <details>
   <summary>More detail</summary>
 
 ### AWS Lambda
 
-Lambda was selected due to being serverless and because API data is ingested at a cadence of one day. They are cheap, run only when required and
-can be invoked asynchronously.
+Lambda was selected due to being serverless and because the API data is ingested at a cadence of one day. They are cheap, run only when required and
+can be invoked asynchronously (i.e. the same Lambda function can be run many times at once).
 
 ### AWS SQS
 
 By implementing an SQS queue, the Lambda function responsible for sending get requests to the APIs was able to be invoked asynchronously resulting
-in the ability to horizontally scale the number of API requests made. For example, if using one Lambda for all get requests to OpenWeather API, it
-took approx. 9 min for 431 requests. If the number of cities were to scale up (e.g. 40,000 locations), it would well and truly exceed the Lambda
-function 15 min run limit. When using an SQS queue to asynchronously invoke the Lambda function with 10 SQS messages per batch, it took approx. 1
-min for 431 requests.
+in the ability to horizontally scale the number of API requests made. For example, when using one Lambda to send get requests to the OpenWeather 
+API, it took approx. 9 min for 431 requests. If the number of cities were to scale up (e.g. 40,000 locations), it would well and truly exceed the 
+Lambda function 15 min run limit. When using an SQS queue to asynchronously invoke the Lambda function with 10 SQS messages per batch, it took 
+approx. 1 min for 431 requests.
 
-Note that for the free account OpenWeather API, the limit is stated as 60 calls per minute, however, completing 431 calls in a minute was able to
+Note that for the free OpenWeather API account, the limit is stated as 60 calls per minute, however, completing 431 calls in a minute was able to
 be achieved. When scaling up to e.g. 40,000 locations, it may be that there are rate limits in place that would cause the pipeline to fail. This
 should be considered in the design phase of the project.
 
@@ -356,7 +358,11 @@ As AWS's native workflow orchestrator, Step Functions was selected to allow for 
 pipelines. Originally, EventBridge rules were used to invoke the Lambda functions on a schedule but this seemed a bit clunky to manage. Then
 invoking a Lambda function from another Lambda function was investigated, again, this seemed clunky. Finally, Step Functions were investigated and
 determined to be the best solution. Step Functions allowed for better organisation, visualisation, invocation, and even the ability to run Athena
-queries direct from a task within the Step Function.
+queries direct from a task within the Step Function. 
+
+One of the main disadvantages of Step Functions is that if a step does fail, then the step function cannot be restarted from the failed step easily. 
+There is a method that can be used to restart from the failed state, as detailed here: https://aws.amazon.com/blogs/compute/resume-aws-step-functions-from-any-state/, 
+however, I have not tested this method yet.
 
 <details>
   <summary>More detail</summary>
@@ -367,6 +373,15 @@ the MSCK repairs of these tables (i.e. A-1_2 and A-2_2, respectively) were execu
 complexity due to the need to create the required Lambda function resources and necessary policies.
 
 </details>
+
+### AWS Glue
+
+To be added
+
+### AWS Athena
+
+To be added
+
 </details>
 
 ## Dashboard
@@ -401,17 +416,17 @@ Kinesis, they can still be used for this project.
 * AWS_REGION: enter your region
 * AWS_ACCOUNT_ID: enter your AWS account id
 
-5. Go to https://www.n2yo.com/login/register/ and register for an N2YO account. Once registered, log in to get your api license key. Take note of
+5. Go to https://www.n2yo.com/login/register/ and register for an N2YO account. Once registered, log in to get your API license key. Take note of
    this key because we'll be using it later.
-6. Go to https://home.openweathermap.org/users/sign_up and register for an OpenWeather account. Once registered, sign in to get your api license
+6. Go to https://home.openweathermap.org/users/sign_up and register for an OpenWeather account. Once registered, sign in to get your API license
    key for the free plan. Take note of this key because we'll be using it later.
 7. Go to your AWS accounts console, search Secrets Manager and then go to the console page. Store a new secret then click on "Other type of
    secret". Under"Key/value pairs", enter the following secrets. Note that the names must be the SAME as shown below. If not then delete the secret
    and enter again.
 
-* n2yo_api_key: enter your N2YO api key. Take note of the secret at the end of the Secret ARN because we'll be using it later (it should look
+* n2yo_api_key: enter your N2YO API key. Take note of the secret at the end of the Secret ARN because we'll be using it later (it should look
   something like n2yo_api_key-G86fg1)
-* openweather_api_key: enter your OpenWeather api key. Take note of the secret at the end of the Secret ARN because we'll be using it later (it
+* openweather_api_key: enter your OpenWeather API key. Take note of the secret at the end of the Secret ARN because we'll be using it later (it
   should look something like openweather_api_key-Fh43ik)
 
 8. Go to the GitHub Actions workflow template at .github/workflows/actions-pipeline.yaml and change the following "env" parameters at the top,
